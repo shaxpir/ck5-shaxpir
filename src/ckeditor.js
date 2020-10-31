@@ -44,6 +44,8 @@ import List from '@ckeditor/ckeditor5-list/src/list';
 import MediaEmbed from '@ckeditor/ckeditor5-media-embed/src/mediaembed';
 import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
 import PasteFromOffice from '@ckeditor/ckeditor5-paste-from-office/src/pastefromoffice';
+import Subscript from '@ckeditor/ckeditor5-basic-styles/src/subscript';
+import Superscript from '@ckeditor/ckeditor5-basic-styles/src/superscript';
 import Table from '@ckeditor/ckeditor5-table/src/table';
 import TableToolbar from '@ckeditor/ckeditor5-table/src/tabletoolbar';
 import TextTransformation from '@ckeditor/ckeditor5-typing/src/texttransformation';
@@ -51,6 +53,12 @@ import TextTransformation from '@ckeditor/ckeditor5-typing/src/texttransformatio
 import HorizontalLine from '@ckeditor/ckeditor5-horizontal-line/src/horizontalline';
 import TodoList from '@ckeditor/ckeditor5-list/src/todolist';
 import WordCount from '@ckeditor/ckeditor5-word-count/src/wordcount';
+
+import { ShaxpirLinguisticHighlightPlugin } from './plugins/ShaxpirLinguisticHighlightPlugin.js';
+import { ShaxpirSentimentPlugin } from './plugins/ShaxpirSentimentPlugin.js';
+import { ShaxpirSyncStatusPlugin } from './plugins/ShaxpirSyncStatusPlugin.js';
+import { ShaxpirThemeSwitcherPlugin } from './plugins/ShaxpirThemeSwitcherPlugin.js';
+import { ShaxpirThesaurusPlugin } from './plugins/ShaxpirThesaurusPlugin.js';
 
 export default class DecoupledEditor extends DecoupledEditorBase {}
 
@@ -106,17 +114,31 @@ DecoupledEditor.builtinPlugins = [
   MediaEmbed,
   Paragraph,
   PasteFromOffice,
+  Subscript,
+  Superscript,
   Table,
   TableToolbar,
   TextTransformation,
   TodoList,
-  WordCount
+  WordCount,
+
+  ShaxpirSentimentPlugin,
+  ShaxpirSyncStatusPlugin,
+  ShaxpirThemeSwitcherPlugin,
+  ShaxpirThesaurusPlugin,
+  ShaxpirLinguisticHighlightPlugin,
 ];
 
 // Editor configuration.
 DecoupledEditor.defaultConfig = {
   toolbar: {
     items: [
+      'highlight', 'vividness', 'spellcheck', 'sentiment',
+      '|',
+      'thesaurus',
+      '|',
+      'syncStatus', 'themes', 'typefaces', 'typesizes',
+      '|',
       'heading',
       '|',
       'bold', 'italic', 'underline', 'strikethrough',  'subscript',  'superscript',
@@ -125,11 +147,17 @@ DecoupledEditor.defaultConfig = {
       '|',
       'indent', 'outdent', 'numberedList', 'bulletedList', 'todoList', 'blockquote', 'horizontalLine',
       '|',
+      /*
       'fontfamily', 'fontsize', 'fontColor', 'fontBackgroundColor',
       '|',
-      'link', 'imageUpload', 'insertTable', 'mediaEmbed',
+      */
+      'link', 'imageUpload', 'insertTable',
       '|',
-      'undo', 'redo'
+      /*
+      'mediaEmbed',
+      '|'
+      */
+     'undo', 'redo'
     ]
   },
   image: {
