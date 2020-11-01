@@ -1,0 +1,7 @@
+.ck-thesaurus-suggestion-bubble {
+  font-family: var(--chrome-font-family);
+  max-width: 300px;
+  width: 300px;
+  white-space: normal;
+  margin: 15px;
+}

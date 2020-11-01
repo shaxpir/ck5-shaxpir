@@ -58,6 +58,8 @@ import { ShaxpirLinguisticHighlightPlugin } from './plugins/ShaxpirLinguisticHig
 import { ShaxpirSentimentPlugin } from './plugins/ShaxpirSentimentPlugin.js';
 import { ShaxpirSyncStatusPlugin } from './plugins/ShaxpirSyncStatusPlugin.js';
 import { ShaxpirThemeSwitcherPlugin } from './plugins/ShaxpirThemeSwitcherPlugin.js';
+import { ShaxpirTypeFacesPlugin } from './plugins/ShaxpirTypeFacesPlugin.js';
+import { ShaxpirTypeSizesPlugin } from './plugins/ShaxpirTypeSizesPlugin.js';
 import { ShaxpirThesaurusPlugin } from './plugins/ShaxpirThesaurusPlugin.js';
 
 export default class DecoupledEditor extends DecoupledEditorBase {}
@@ -125,6 +127,8 @@ DecoupledEditor.builtinPlugins = [
   ShaxpirSentimentPlugin,
   ShaxpirSyncStatusPlugin,
   ShaxpirThemeSwitcherPlugin,
+  ShaxpirTypeFacesPlugin,
+  ShaxpirTypeSizesPlugin,
   ShaxpirThesaurusPlugin,
   ShaxpirLinguisticHighlightPlugin,
 ];

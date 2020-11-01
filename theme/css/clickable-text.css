@@ -1,0 +1,10 @@
+span.ck.ck-clickable-text {
+  font-family: var(--chrome-font-family);
+  font-size: 15px;
+  white-space: normal;
+}
+
+span.ck.ck-clickable-text:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}

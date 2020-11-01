@@ -1,0 +1,5 @@
+span.ck.ck-unclickable-text {
+  font-family: var(--chrome-font-family);
+  font-size: 15px;
+  white-space: normal;
+}

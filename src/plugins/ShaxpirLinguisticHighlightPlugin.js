@@ -6,6 +6,11 @@ import vividnessIcon from '../../theme/icons/vividness.svg';
 import spellcheckIcon from '../../theme/icons/spellcheck.svg';
 
 export class ShaxpirLinguisticHighlightPlugin extends Plugin {
+
+  static get pluginName() {
+    return 'ShaxpirLinguisticHighlight';
+  }
+
   init() {
     console.log('ShaxpirLinguisticHighlightPlugin was initialized');
 

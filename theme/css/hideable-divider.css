@@ -1,0 +1,8 @@
+hr.ck.ck-hideable-divider {
+  border-bottom: none;
+  border-top-width: 1px;
+  border-top-style: dotted;
+  border-top-color: var(--main-accent-color);
+  margin-top:10px;
+  margin-bottom:10px;
+}

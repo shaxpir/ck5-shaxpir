@@ -1,0 +1,46 @@
+:root {
+    --main-bg-color: #404448;
+    --panel-bg-color: #fcfcfc;
+    --translucent-panel-bg-color: rgba(255, 255, 255, 0.9);
+    --transparent-panel-bg-color: rgba(255, 255, 255, 0.01);
+
+    --chrome-font-family: "Gill Sans";
+
+    --main-text-color: #000;
+    --text-highlight-subdued-color: #999;
+    --nav-text-color: #333;
+    --main-accent-color: #c2081d;
+    --secondary-accent-color: var(--main-accent-color);
+    --prose-bg-color: #fff;
+    --placeholder-text-color: #ccc;
+  }
+  
+  div#editor {
+    height: 400px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    margin: 10px;
+  }
+
+  div#toolbar {
+    margin: 10px;
+  }
+
+  /*
+   * This CSS moves the default tooltip position for toolbar buttons from BOTTOM to TOP
+   * https://stackoverflow.com/questions/53101161/how-to-change-the-default-position-of-button-tooltips-in-ckeditor-5
+   * But it doesn't change DROPDOWNS, which still drop DOWN instead of UP...
+   */
+  .ck.ck-tooltip.ck-tooltip_s {
+    bottom: auto;
+    top: calc(-1 * var(--ck-tooltip-arrow-size));
+    transform: translateY( -100% );
+  }
+
+  .ck.ck-tooltip.ck-tooltip_s .ck-tooltip__text::after {
+    top: auto;
+    bottom: calc(-1 * var(--ck-tooltip-arrow-size));
+    transform: translateX( -50% );
+    border-color: var(--ck-color-tooltip-background) transparent transparent transparent;
+    border-width: var(--ck-tooltip-arrow-size) var(--ck-tooltip-arrow-size) 0 var(--ck-tooltip-arrow-size);
+  }
