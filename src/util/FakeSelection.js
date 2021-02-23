@@ -1,4 +1,6 @@
-export default class FakeSelection { 
+/* eslint-disable padded-blocks,indent,space-in-parens,template-curly-spacing  */
+
+export default class FakeSelection {
 
   static init(editor, markerName) {
     // Renders a fake visual selection marker on an expanded selection.
@@ -8,7 +10,7 @@ export default class FakeSelection {
         classes: [ `ck-fake-${markerName}-selection` ]
       }
     });
-  
+
     // Renders a fake visual selection marker on a collapsed selection.
     editor.conversion.for('editingDowncast').markerToElement({
       model: markerName,

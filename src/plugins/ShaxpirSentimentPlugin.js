@@ -1,3 +1,7 @@
+/* eslint-disable padded-blocks,indent,space-in-parens,template-curly-spacing,prefer-const,quotes,ckeditor5-rules/ckeditor-imports  */
+/* eslint-disable key-spacing,max-statements-per-line  */
+/* global console */
+
 import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
 import ClickObserver from '@ckeditor/ckeditor5-engine/src/view/observer/clickobserver';
 import clickOutsideHandler from '@ckeditor/ckeditor5-ui/src/bindings/clickoutsidehandler';
@@ -79,7 +83,7 @@ export class ShaxpirSentimentPlugin extends Plugin {
       });
 
       // Callback executed once the button is clicked.
-      button.on('execute', () => { this.exec() });
+      button.on('execute', () => { this.exec(); });
 
       return button;
     });
@@ -96,7 +100,7 @@ export class ShaxpirSentimentPlugin extends Plugin {
   exec() {
     let text = this._getSelectedText();
     if (text && text.length > 0) {
-      console.log("selected text: " + text)
+      console.log("selected text: " + text);
       let sentiment = this._getSentimentForWord(text);
       if (sentiment) {
         console.log("sentiment.score: " + sentiment.score);
@@ -140,7 +144,7 @@ export class ShaxpirSentimentPlugin extends Plugin {
         position: FakeSelection.getBalloonPositionData(editor, VISUAL_SELECTION_MARKER_NAME)
       });
     }
-    
+
     // Be sure panel is visible.
     this._balloon.showStack('main');
 
