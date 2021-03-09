@@ -26,6 +26,7 @@
     "@ckeditor/ckeditor5-block-quote": "latest",
     "@ckeditor/ckeditor5-build-decoupled-document": "latest",
     "@ckeditor/ckeditor5-ckfinder": "latest",
+    "@ckeditor/ckeditor5-cloud-services": "latest",
     "@ckeditor/ckeditor5-dev-utils": "latest",
     "@ckeditor/ckeditor5-dev-webpack-plugin": "latest",
     "@ckeditor/ckeditor5-easy-image": "latest",

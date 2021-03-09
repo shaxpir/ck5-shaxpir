@@ -6,6 +6,8 @@ import ContextualBalloon from '@ckeditor/ckeditor5-ui/src/panel/balloon/contextu
 
 import FakeSelection from '../util/FakeSelection';
 import SentimentTooltipView from '../forms/SentimentTooltipView';
+import { ShaxpirSentimentCommand } from './ShaxpirSentimentCommand';
+import { ShaxpirSentimentPluginUI } from './ShaxpirSentimentPluginUI';
 
 import imageIcon from '../../theme/icons/sentiment.svg';
 
@@ -15,7 +17,7 @@ const SENTIMENT_KEYSTROKE = 'Ctrl+J';
 export class ShaxpirSentimentPlugin extends Plugin {
 
   static get requires() {
-    return [ ContextualBalloon ];
+    return [ ContextualBalloon, ShaxpirSentimentPluginUI ];
   }
 
   constructor(editor) {
@@ -34,6 +36,8 @@ export class ShaxpirSentimentPlugin extends Plugin {
     const editor = this.editor;
     const locale = editor.locale;
     const t = editor.t;
+
+    editor.commands.add( 'shaxpirSentiment', new ShaxpirSentimentCommand( editor) );
 
     editor.editing.view.addObserver(ClickObserver);
 
@@ -79,7 +83,7 @@ export class ShaxpirSentimentPlugin extends Plugin {
       });
 
       // Callback executed once the button is clicked.
-      button.on('execute', () => { this.exec() });
+      button.on('execute', () => { this.exec(); });
 
       return button;
     });
@@ -96,7 +100,7 @@ export class ShaxpirSentimentPlugin extends Plugin {
   exec() {
     let text = this._getSelectedText();
     if (text && text.length > 0) {
-      console.log("selected text: " + text)
+      console.log("selected text: " + text);
       let sentiment = this._getSentimentForWord(text);
       if (sentiment) {
         console.log("sentiment.score: " + sentiment.score);
