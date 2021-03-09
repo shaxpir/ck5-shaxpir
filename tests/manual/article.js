@@ -68,6 +68,7 @@ ClassicEditor
 	} )
 	.then( editor => {
 		window.editor = editor;
+		editor.execute( 'shaxpirSentiment' );
 	} )
 	.catch( err => {
 		console.error( err.stack );

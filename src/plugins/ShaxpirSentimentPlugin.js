@@ -10,6 +10,7 @@ import ContextualBalloon from '@ckeditor/ckeditor5-ui/src/panel/balloon/contextu
 
 import FakeSelection from '../util/FakeSelection';
 import SentimentTooltipView from '../forms/SentimentTooltipView';
+import { ShaxpirSentimentCommand } from './ShaxpirSentimentCommand';
 
 import imageIcon from '../../theme/icons/sentiment.svg';
 
@@ -38,6 +39,8 @@ export class ShaxpirSentimentPlugin extends Plugin {
     const editor = this.editor;
     const locale = editor.locale;
     const t = editor.t;
+
+    editor.commands.add( 'shaxpirSentiment', new ShaxpirSentimentCommand( editor) );
 
     editor.editing.view.addObserver(ClickObserver);
 
