@@ -11,6 +11,8 @@ export class ShaxpirSentimentCommand extends Command {
 		this._lastMarkerId = 0;
 
 		this.set( 'isOn', false );
+
+		this.editor.model.document.on( 'change:data', this._modelChangeListener.bind( this ) )
 	}
 
 	execute() {
@@ -20,16 +22,20 @@ export class ShaxpirSentimentCommand extends Command {
 		const newOnValue = !this.isOn;
 
 		if ( newOnValue ) {
-			for ( const item of model.createRangeIn( modelRoot ).getItems() ) {
-				if ( item.is( '$text' ) || item.is( '$textProxy' ) ) {
-					this._processTextItem( item.is( '$textProxy' ) ? item.textNode : item )
-				}
-			}
+			this._doCheck( model.createRangeIn( modelRoot ) );
 		} else {
 			this._clearSentimentMarkers();
 		}
 
 		this.isOn = newOnValue;
+	}
+
+	_doCheck( range ) {
+		for ( const item of range.getItems() ) {
+			if ( item.is( '$text' ) || item.is( '$textProxy' ) ) {
+				this._processTextItem( item.is( '$textProxy' ) ? item.textNode : item )
+			}
+		}
 	}
 
 	_processTextItem( textItem ) {
@@ -86,6 +92,12 @@ export class ShaxpirSentimentCommand extends Command {
 
 				this._resultsMap.delete( markerName );
 			}
+		}
+	}
+
+	_modelChangeListener( eventInfo, batch ) {
+		if ( !this.isOn ) {
+			return;
 		}
 	}
 }
