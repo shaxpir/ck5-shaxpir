@@ -1,7 +1,3 @@
-/* eslint-disable padded-blocks,indent,space-in-parens,template-curly-spacing,prefer-const,quotes,ckeditor5-rules/ckeditor-imports  */
-/* eslint-disable key-spacing,max-statements-per-line  */
-/* global console */
-
 import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
 import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview';
 import { ShaxpirSentimentCommand } from './ShaxpirSentimentCommand';
