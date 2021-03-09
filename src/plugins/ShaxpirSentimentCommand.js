@@ -9,21 +9,27 @@ export class ShaxpirSentimentCommand extends Command {
 		this._resultsMap = new Map();
 
 		this._lastMarkerId = 0;
+
+		this.set( 'isOn', false );
 	}
 
 	execute() {
 		const model = this.editor.model;
 		const modelRoot = model.document.getRoot();
 
-		// Triggering the command intends to reevaluate whole document.
-		// So remove previous results.
-		this._clearSentimentMarkers();
+		const newOnValue = !this.isOn;
 
-		for ( const item of model.createRangeIn( modelRoot ).getItems() ) {
-			if ( item.is( '$text' ) || item.is( '$textProxy' ) ) {
-				this._processTextItem( item.is( '$textProxy' ) ? item.textNode : item )
+		if ( newOnValue ) {
+			for ( const item of model.createRangeIn( modelRoot ).getItems() ) {
+				if ( item.is( '$text' ) || item.is( '$textProxy' ) ) {
+					this._processTextItem( item.is( '$textProxy' ) ? item.textNode : item )
+				}
 			}
+		} else {
+			this._clearSentimentMarkers();
 		}
+
+		this.isOn = newOnValue;
 	}
 
 	_processTextItem( textItem ) {
@@ -40,23 +46,23 @@ export class ShaxpirSentimentCommand extends Command {
 			if ( isWord ) {
 				const sentimentScore = this.editor.config.get( 'sentiment' ).getSentimentForWord( currentPart );
 
-				// console.log( `Word ${ currentPart }, score: `, sentimentScore );
+				if ( sentimentScore ) {
+					model.change( writer => {
+						this._lastMarkerId += 1;
+						const markerName = `${ MARKER_PREFIX }${ this._lastMarkerId }`;
 
-				model.change( writer => {
-					this._lastMarkerId += 1;
-					const markerName = `${ MARKER_PREFIX }${ this._lastMarkerId }`;
+						const start = model.createPositionAt( textItem.parent, textItem.startOffset + currentPartOffset );
+						const end = model.createPositionAt( textItem.parent, textItem.startOffset + currentPartOffset + currentPart.length );
 
-					const start = model.createPositionAt( textItem.parent, textItem.startOffset + currentPartOffset );
-					const end = model.createPositionAt( textItem.parent, textItem.startOffset + currentPartOffset + currentPart.length );
+						writer.addMarker( markerName, {
+							usingOperation: false,
+							affectsData: false,
+							range: model.createRange( start, end )
+						} );
 
-					writer.addMarker( markerName, {
-						usingOperation: false,
-						affectsData: false,
-						range: model.createRange( start, end )
+						this._resultsMap.set( markerName, sentimentScore );
 					} );
-
-					this._resultsMap.set( markerName, sentimentScore );
-				} );
+				}
 			}
 
 			currentPartOffset += currentPart.length;
@@ -76,8 +82,9 @@ export class ShaxpirSentimentCommand extends Command {
 			if ( markerName.startsWith( MARKER_PREFIX ) ) {
 				model.change( writer => {
 					writer.removeMarker( marker );
-					this._resultsMap.delete( markerName );
 				} );
+
+				this._resultsMap.delete( markerName );
 			}
 		}
 	}

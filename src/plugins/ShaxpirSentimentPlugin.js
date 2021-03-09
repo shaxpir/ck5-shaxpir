@@ -11,6 +11,7 @@ import ContextualBalloon from '@ckeditor/ckeditor5-ui/src/panel/balloon/contextu
 import FakeSelection from '../util/FakeSelection';
 import SentimentTooltipView from '../forms/SentimentTooltipView';
 import { ShaxpirSentimentCommand } from './ShaxpirSentimentCommand';
+import { ShaxpirSentimentPluginUI } from './ShaxpirSentimentPluginUI';
 
 import imageIcon from '../../theme/icons/sentiment.svg';
 
@@ -20,7 +21,7 @@ const SENTIMENT_KEYSTROKE = 'Ctrl+J';
 export class ShaxpirSentimentPlugin extends Plugin {
 
   static get requires() {
-    return [ ContextualBalloon ];
+    return [ ContextualBalloon, ShaxpirSentimentPluginUI ];
   }
 
   constructor(editor) {
@@ -41,21 +42,6 @@ export class ShaxpirSentimentPlugin extends Plugin {
     const t = editor.t;
 
     editor.commands.add( 'shaxpirSentiment', new ShaxpirSentimentCommand( editor) );
-
-    editor.conversion.for( 'editingDowncast' ).markerToHighlight( {
-    	model: 'sentiment-marker',
-    	view: ( markerData, conversionApi ) => {
-    		const sentimentInfo = editor.commands.get( 'shaxpirSentiment' )._resultsMap.get( markerData.markerName );
-
-    		return {
-    			name: 'span',
-    			attributes: {
-    				'data-sentiment-score': sentimentInfo.score,
-    				'style': 'background-color: ' + sentimentInfo.color
-    			}
-    		};
-    	}
-    } );
 
     editor.editing.view.addObserver(ClickObserver);
 
