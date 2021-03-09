@@ -42,6 +42,21 @@ export class ShaxpirSentimentPlugin extends Plugin {
 
     editor.commands.add( 'shaxpirSentiment', new ShaxpirSentimentCommand( editor) );
 
+    editor.conversion.for( 'editingDowncast' ).markerToHighlight( {
+    	model: 'sentiment-marker',
+    	view: ( markerData, conversionApi ) => {
+    		const sentimentInfo = editor.commands.get( 'shaxpirSentiment' )._resultsMap.get( markerData.markerName );
+
+    		return {
+    			name: 'span',
+    			attributes: {
+    				'data-sentiment-score': sentimentInfo.score,
+    				'style': 'background-color: ' + sentimentInfo.color
+    			}
+    		};
+    	}
+    } );
+
     editor.editing.view.addObserver(ClickObserver);
 
     this.sentimentTooltipView = new SentimentTooltipView(locale);

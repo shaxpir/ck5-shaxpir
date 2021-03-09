@@ -1,10 +1,12 @@
 import Command from '@ckeditor/ckeditor5-core/src/command';
 
-const MARKER_PREFIX = 'sentiment-marker-';
+const MARKER_PREFIX = 'sentiment-marker:';
 
 export class ShaxpirSentimentCommand extends Command {
 	constructor( editor ) {
 		super( editor );
+
+		this._resultsMap = new Map();
 
 		this._lastMarkerId = 0;
 	}
@@ -38,7 +40,7 @@ export class ShaxpirSentimentCommand extends Command {
 			if ( isWord ) {
 				const sentimentScore = this.editor.config.get( 'sentiment' ).getSentimentForWord( currentPart );
 
-				console.log( `Word ${ currentPart }, score: `, sentimentScore );
+				// console.log( `Word ${ currentPart }, score: `, sentimentScore );
 
 				model.change( writer => {
 					this._lastMarkerId += 1;
@@ -51,7 +53,9 @@ export class ShaxpirSentimentCommand extends Command {
 						usingOperation: false,
 						affectsData: false,
 						range: model.createRange( start, end )
-					});
+					} );
+
+					this._resultsMap.set( markerName, sentimentScore );
 				} );
 			}
 
@@ -68,9 +72,11 @@ export class ShaxpirSentimentCommand extends Command {
 		const model = this.editor.model;
 
 		for ( const marker of model.markers ) {
-			if ( marker.name.startsWith( MARKER_PREFIX ) ) {
+			const markerName = marker.name;
+			if ( markerName.startsWith( MARKER_PREFIX ) ) {
 				model.change( writer => {
 					writer.removeMarker( marker );
+					this._resultsMap.delete( markerName );
 				} );
 			}
 		}
