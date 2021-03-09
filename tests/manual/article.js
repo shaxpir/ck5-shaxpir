@@ -15,6 +15,7 @@ ClassicEditor
 		plugins: [ ArticlePluginSet, ShaxpirSentimentPlugin ],
 		toolbar: [
 			'sentiment',
+			'sentimentToggle',
 			'heading',
 			'|',
 			'bold',
@@ -38,19 +39,21 @@ ClassicEditor
 					return {
 						score: 9.2,
 						label: 'very positive',
-						color: 'green'
+						color: '#1e701e'
 					};
 				} else if ( word == 'Quote' ) {
 					return {
 						score: 3.5,
 						label: 'negative',
-						color: 'lightred'
+						color: '#f4baba'
 					};
+				} else if ( word.match( /^[\d]+$/ ) ) {
+					return null;
 				} else {
 					return {
 						score: 7.2,
 						label: 'moderately positive',
-						color: 'darkgreen'
+						color: '#6eb66e'
 					};
 				}
 			}
