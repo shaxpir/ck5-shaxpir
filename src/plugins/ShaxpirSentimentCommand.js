@@ -33,7 +33,7 @@ export class ShaxpirSentimentCommand extends Command {
 	_doCheck( range ) {
 		for ( const item of range.getItems() ) {
 			if ( item.is( '$text' ) || item.is( '$textProxy' ) ) {
-				this._processTextItem( item.is( '$textProxy' ) ? item.textNode : item )
+				this._processTextItem( item.is( '$textProxy' ) ? item.textNode : item );
 			}
 		}
 	}
@@ -93,12 +93,21 @@ export class ShaxpirSentimentCommand extends Command {
 	 * Removes all the existing markers intersecting with a given model `range`.
 	 *
 	 * @param {module:engine/model/range~Range} range
+	 * @returns {module:engine/model/range~Range|null} A range spanned over content where the markers were removed or `null` if no
+	 * markers were removed.
 	 */
 	_removeSentimentMarkers( range ) {
 		const model = this.editor.model;
+		let modifiedRange = null;
 
 		for ( const marker of model.markers.getMarkersIntersectingRange( range ) ) {
 			if ( marker.name.startsWith( MARKER_PREFIX ) ) {
+				if ( !modifiedRange ) {
+					modifiedRange = marker.getRange();
+				} else {
+					modifiedRange = modifiedRange.getJoined( marker.getRange() );
+				}
+
 				model.change( writer => {
 					writer.removeMarker( marker );
 
@@ -111,6 +120,8 @@ export class ShaxpirSentimentCommand extends Command {
 				} );
 			}
 		}
+
+		return modifiedRange;
 	}
 
 	_modelChangeListener() {
@@ -132,11 +143,11 @@ export class ShaxpirSentimentCommand extends Command {
 			);
 
 			// In any case first remove markers in modified range.
-			this._removeSentimentMarkers( range );
+			const removedRange = this._removeSentimentMarkers( range );
 
 			// Search inserted content for any highlightable items.
 			if ( entry.type == 'insert' ) {
-				this._doCheck( range );
+				this._doCheck( range.getJoined( removedRange ) );
 			}
 		}
 	}
