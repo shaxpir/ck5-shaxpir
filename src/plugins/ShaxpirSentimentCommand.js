@@ -12,7 +12,7 @@ export class ShaxpirSentimentCommand extends Command {
 
 		this.set( 'isOn', false );
 
-		this.editor.model.document.on( 'change:data', this._modelChangeListener.bind( this ) )
+		this.editor.model.document.on( 'change:data', this._modelChangeListener.bind( this ) );
 	}
 
 	execute() {
@@ -46,7 +46,7 @@ export class ShaxpirSentimentCommand extends Command {
 
 		let currentPartOffset = 0;
 
-		for (const currentPart of parts) {
+		for ( const currentPart of parts ) {
 			const isWord = currentPart.length && currentPart[ 0 ].match( /\w/ );
 
 			if ( isWord ) {
@@ -58,7 +58,8 @@ export class ShaxpirSentimentCommand extends Command {
 						const markerName = `${ MARKER_PREFIX }${ this._lastMarkerId }`;
 
 						const start = model.createPositionAt( textItem.parent, textItem.startOffset + currentPartOffset );
-						const end = model.createPositionAt( textItem.parent, textItem.startOffset + currentPartOffset + currentPart.length );
+						const end = model.createPositionAt( textItem.parent,
+							textItem.startOffset + currentPartOffset + currentPart.length );
 
 						writer.addMarker( markerName, {
 							usingOperation: false,
@@ -91,13 +92,61 @@ export class ShaxpirSentimentCommand extends Command {
 				} );
 
 				this._resultsMap.delete( markerName );
+				// this.editor.model.document.once( 'change:data', () => this._resultsMap.delete( markerName ) );
+				// window.setTimeout( () => this._resultsMap.delete( markerName ), 200 );
 			}
 		}
 	}
 
-	_modelChangeListener( eventInfo, batch ) {
+	/**
+	 * Removes all the existing markers intersecting with a given model `range`.
+	 *
+	 * @param {module:engine/model/range~Range} range
+	 */
+	_removeSentimentMarkers( range ) {
+		const model = this.editor.model;
+
+		for ( const marker of model.markers.getMarkersIntersectingRange( range ) ) {
+			if ( marker.name.startsWith( MARKER_PREFIX ) ) {
+				model.change( writer => {
+					writer.removeMarker( marker );
+
+					// We can't delete the sentiment data from resultsMap synchronously, as this method might be executed within
+					// yet another model.change() closure.
+					// This means that writer.removeMarker() call will NOT be executed synchronously. And other bits of code might
+					// still operate on the marker.
+					// E.g. during the development there were cases that editingDowncast's markerToHighlight converter was called.
+					this.editor.model.document.once( 'change:data', () => this._resultsMap.delete( marker.name ) );
+				} );
+			}
+		}
+	}
+
+	_modelChangeListener() {
 		if ( !this.isOn ) {
 			return;
+		}
+
+		const model = this.editor.model;
+		const changes = Array.from( model.document.differ.getChanges() );
+
+		for ( const entry of changes ) {
+			if ( [ 'insert', 'remove' ].includes( entry.type ) == false ) {
+				continue;
+			}
+
+			const range = model.createRange(
+				entry.position,
+				entry.position.clone().getShiftedBy( entry.length )
+			);
+
+			// In any case first remove markers in modified range.
+			this._removeSentimentMarkers( range );
+
+			// Search inserted content for any highlightable items.
+			if ( entry.type == 'insert' ) {
+				this._doCheck( range );
+			}
 		}
 	}
 }
