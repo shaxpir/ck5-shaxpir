@@ -84,18 +84,9 @@ export class ShaxpirSentimentCommand extends Command {
 	_clearSentimentMarkers() {
 		const model = this.editor.model;
 
-		for ( const marker of model.markers ) {
-			const markerName = marker.name;
-			if ( markerName.startsWith( MARKER_PREFIX ) ) {
-				model.change( writer => {
-					writer.removeMarker( marker );
-				} );
+		this._removeSentimentMarkers( model.createRangeIn( model.document.getRoot() ) );
 
-				this._resultsMap.delete( markerName );
-				// this.editor.model.document.once( 'change:data', () => this._resultsMap.delete( markerName ) );
-				// window.setTimeout( () => this._resultsMap.delete( markerName ), 200 );
-			}
-		}
+		this._lastMarkerId = 0;
 	}
 
 	/**
