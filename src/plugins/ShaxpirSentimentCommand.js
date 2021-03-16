@@ -33,7 +33,7 @@ export class ShaxpirSentimentCommand extends Command {
 	_doCheck( range ) {
 		for ( const item of range.getItems() ) {
 			if ( item.is( '$text' ) || item.is( '$textProxy' ) ) {
-				this._processTextItem( item.is( '$textProxy' ) ? item.textNode : item );
+				this._processTextItem( item );
 			}
 		}
 	}
@@ -46,6 +46,8 @@ export class ShaxpirSentimentCommand extends Command {
 
 		let currentPartOffset = 0;
 
+		const { startOffset } = textItem;
+
 		for ( const currentPart of parts ) {
 			const isWord = currentPart.length && currentPart[ 0 ].match( /\w/ );
 
@@ -57,9 +59,9 @@ export class ShaxpirSentimentCommand extends Command {
 						this._lastMarkerId += 1;
 						const markerName = `${ MARKER_PREFIX }${ this._lastMarkerId }`;
 
-						const start = model.createPositionAt( textItem.parent, textItem.startOffset + currentPartOffset );
+						const start = model.createPositionAt( textItem.parent, startOffset + currentPartOffset );
 						const end = model.createPositionAt( textItem.parent,
-							textItem.startOffset + currentPartOffset + currentPart.length );
+							startOffset + currentPartOffset + currentPart.length );
 
 						writer.addMarker( markerName, {
 							usingOperation: false,
@@ -100,6 +102,18 @@ export class ShaxpirSentimentCommand extends Command {
 		const model = this.editor.model;
 		let modifiedRange = null;
 
+		// if ( !range.start.nodeBefore ) {
+		// 	range = model.createRange(
+		// 		range.start.getShiftedBy( -1 ),
+		// 		range.end
+		// 	);
+		// }
+
+		// const startPos = range.start.nodeBefore ?
+		// 	range.start :
+		// 	// if it's anchored in text node, move back by one so that potentially previous letter is considered.
+		// 	range.start.clone().getShiftedBy( -1 );
+
 		for ( const marker of model.markers.getMarkersIntersectingRange( range ) ) {
 			if ( marker.name.startsWith( MARKER_PREFIX ) ) {
 				if ( !modifiedRange ) {
@@ -137,18 +151,23 @@ export class ShaxpirSentimentCommand extends Command {
 				continue;
 			}
 
+			// const startPos = entry.position.nodeBefore ?
+			// 	entry.position :
+			// 	// if it's anchored in text node, move back by one so that potentially previous letter is considered.
+			// 	entry.position.getShiftedBy( -1 );
+
 			const range = model.createRange(
 				entry.position,
-				entry.position.clone().getShiftedBy( entry.length )
+				entry.position.getShiftedBy( entry.length )
 			);
 
 			// In any case first remove markers in modified range.
 			const removedRange = this._removeSentimentMarkers( range );
 
 			// Search inserted content for any highlightable items.
-			if ( entry.type == 'insert' ) {
-				this._doCheck( range.getJoined( removedRange ) );
-			}
+			// if ( entry.type == 'insert' ) {
+				this._doCheck( removedRange ? range.getJoined( removedRange ) : range );
+			// }
 		}
 	}
 }
