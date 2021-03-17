@@ -45,7 +45,6 @@ export class ShaxpirSentimentCommand extends Command {
 		const model = this.editor.model;
 
 		let currentPartOffset = 0;
-
 		const { startOffset } = textItem;
 
 		for ( const currentPart of parts ) {
@@ -102,17 +101,26 @@ export class ShaxpirSentimentCommand extends Command {
 		const model = this.editor.model;
 		let modifiedRange = null;
 
-		// if ( !range.start.nodeBefore ) {
-		// 	range = model.createRange(
-		// 		range.start.getShiftedBy( -1 ),
-		// 		range.end
-		// 	);
-		// }
+		// @todo: this helps with typing at the end/beginning of existing sentiment marker. But such implementation have a risk of invalid offsets.
+		try {
+			if ( range.start.textNode && range.start.compareWith( model.createPositionBefore( range.start.textNode ) ) == 'after' ) {
+					range = model.createRange(
+						range.start.getShiftedBy( -1 ),
+						range.end
+					);
+			}
+		} catch ( err ) {
+		}
 
-		// const startPos = range.start.nodeBefore ?
-		// 	range.start :
-		// 	// if it's anchored in text node, move back by one so that potentially previous letter is considered.
-		// 	range.start.clone().getShiftedBy( -1 );
+		try {
+			if ( range.end.textNode && range.end.compareWith( model.createPositionAfter( range.end.textNode ) ) == 'before' ) {
+				range = model.createRange(
+					range.start,
+					range.end.getShiftedBy( 1 )
+				);
+			}
+		} catch ( err ) {
+		}
 
 		for ( const marker of model.markers.getMarkersIntersectingRange( range ) ) {
 			if ( marker.name.startsWith( MARKER_PREFIX ) ) {
