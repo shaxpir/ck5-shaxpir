@@ -1,6 +1,8 @@
 import Command from '@ckeditor/ckeditor5-core/src/command';
+import Range from '@ckeditor/ckeditor5-engine/src/model/range';
 
 const MARKER_PREFIX = 'sentiment-marker:';
+const WORD_SEPARATOR_REGEXP = /([^\w]+)/;
 
 export class ShaxpirSentimentCommand extends Command {
 	constructor( editor ) {
@@ -41,7 +43,7 @@ export class ShaxpirSentimentCommand extends Command {
 	_processTextItem( textItem ) {
 		// @todo simplified handling, there's no handling for cases when a word is split into two text items/proxies.
 		// E.g. [foo bar ba][z bom] - ba and z will be treated as two separate words.
-		const parts = textItem.data.split( /([^\w]+)/ );
+		const parts = textItem.data.split( WORD_SEPARATOR_REGEXP );
 		const model = this.editor.model;
 
 		let currentPartOffset = 0;
@@ -114,6 +116,7 @@ export class ShaxpirSentimentCommand extends Command {
 
 		try {
 			if ( range.end.textNode && range.end.compareWith( model.createPositionAfter( range.end.textNode ) ) == 'before' ) {
+				// Checks whether end position is in text node, and whether it's before the end of this text node.
 				range = model.createRange(
 					range.start,
 					range.end.getShiftedBy( 1 )
@@ -159,23 +162,78 @@ export class ShaxpirSentimentCommand extends Command {
 				continue;
 			}
 
-			// const startPos = entry.position.nodeBefore ?
-			// 	entry.position :
-			// 	// if it's anchored in text node, move back by one so that potentially previous letter is considered.
-			// 	entry.position.getShiftedBy( -1 );
-
-			const range = model.createRange(
+			let range = model.createRange(
 				entry.position,
-				entry.position.getShiftedBy( entry.length )
+				// Expand selection only in case of addition (in case of removing it doesn't make sense as the content was removed).
+				entry.type == 'insert' ? entry.position.getShiftedBy( entry.length ) : entry.position
 			);
+
+			range = this._expandRangeToWord( range );
 
 			// In any case first remove markers in modified range.
 			const removedRange = this._removeSentimentMarkers( range );
 
-			// Search inserted content for any highlightable items.
-			// if ( entry.type == 'insert' ) {
-				this._doCheck( removedRange ? range.getJoined( removedRange ) : range );
-			// }
+			// Search modified content for any highlightable items.
+			this._doCheck( removedRange ? range.getJoined( removedRange ) : range );
 		}
+	}
+
+	/**
+	 * Expands a given range to contain whole word.
+	 *
+	 * Examples:
+	 * ```
+	 * foo ba[aa]ar baz   ----> foo [baaaar] baz
+	 * [f]oo ba[aa]ar baz   ----> [foo] baaaar baz
+	 * [foo] ba[aa]ar baz   ----> [foo] baaaar baz
+	 * ```
+	 */
+	_expandRangeToWord( range ) {
+		const positions = {
+			start: range.start.clone(),
+			end: range.end.clone()
+		};
+
+		// Expanding left.
+		const startTextNode = range.start.textNode;
+		if ( startTextNode ) {
+			const charsToCheck = range.start.offset - startTextNode.startOffset;
+			let charsToShift = 0;
+
+			// Iterate characters one by one as long as there is no word separator.
+			for ( let i = charsToCheck; i > 0; i-- ) {
+				if ( startTextNode.data[ i - 1 ].match( WORD_SEPARATOR_REGEXP ) ) {
+					break;
+				} else {
+					charsToShift++;
+				}
+			}
+
+			if ( charsToShift ) {
+				positions.start = range.start.getShiftedBy( charsToShift * -1 );
+			}
+		}
+
+		// Expanding right.
+		const endTextNode = range.end.textNode;
+		if ( endTextNode ) {
+			const charsToCheck = endTextNode.endOffset - range.end.offset;
+			let charsToShift = 0;
+
+			// Iterate characters one by one as long as there is no word separator.
+			for ( let i = 0; i < charsToCheck; i++ ) {
+				if ( endTextNode.data[ range.end.offset - endTextNode.startOffset + i ].match( WORD_SEPARATOR_REGEXP ) ) {
+					break;
+				} else {
+					charsToShift++;
+				}
+			}
+
+			if ( charsToShift ) {
+				positions.end = range.end.getShiftedBy( charsToShift );
+			}
+		}
+
+		return new Range( positions.start, positions.end );
 	}
 }

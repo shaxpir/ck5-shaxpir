@@ -4,8 +4,10 @@ import { ShaxpirSentimentCommand } from './../src/plugins/ShaxpirSentimentComman
 import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
 import Input from '@ckeditor/ckeditor5-typing/src/input';
 import Delete from '@ckeditor/ckeditor5-typing/src/delete';
+import { Enter, ShiftEnter } from 'ckeditor5/src/enter';
 import ClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
 import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
+import { parse, stringify } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
 
 describe( 'HighlightEditing', () => {
 	let editor, model, editableElement;
@@ -16,12 +18,16 @@ describe( 'HighlightEditing', () => {
 
 		return ClassicEditor
 			.create( editableElement, {
-				plugins: [ Paragraph, Input, Delete ],
+				plugins: [ Paragraph, Input, Delete, Enter, ShiftEnter ],
 				sentiment: {
-					getSentimentForWord: sinon.stub().returns( {
-						score: 7.2,
-						label: 'moderately positive',
-						color: '#6eb66e'
+					getSentimentForWord: sinon.spy( word => {
+						if ( word != 'ignore' ) {
+							return {
+								score: 7.2,
+								label: 'moderately positive',
+								color: '#6eb66e'
+							};
+						}
 					} )
 				}
 			} )
@@ -165,6 +171,48 @@ describe( 'HighlightEditing', () => {
 			sinon.assert.calledWith( editor.config.get( 'sentiment' ).getSentimentForWord, 'a' );
 		} );
 
+		it( 'works when multiple letters typed into an empty paragraph', () => {
+			setModelData( model, '<paragraph>[]</paragraph>' );
+			editor.execute( 'shaxpirSentiment' );
+
+			editor.execute( 'input', { text: 'a' } );
+			editor.execute( 'input', { text: 'b' } );
+
+			assertMarkers( 1, '<paragraph>' +
+				'<sentiment-marker:2:start></sentiment-marker:2:start>ab<sentiment-marker:2:end></sentiment-marker:2:end>' +
+				'</paragraph>' );
+
+			sinon.assert.calledWith( editor.config.get( 'sentiment' ).getSentimentForWord, 'a' );
+		} );
+
+		it( 'works when typed after ignored word', () => {
+			setModelData( model, '<paragraph>ignore ignore[]</paragraph>' );
+			editor.execute( 'shaxpirSentiment' );
+
+			editor.execute( 'input', { text: 'a' } );
+
+			assertMarkers( 1, '<paragraph>' +
+				'ignore ' +
+				'<sentiment-marker:1:start></sentiment-marker:1:start>ignorea<sentiment-marker:1:end></sentiment-marker:1:end>' +
+				'</paragraph>' );
+
+			sinon.assert.calledWith( editor.config.get( 'sentiment' ).getSentimentForWord, 'ignorea' );
+		} );
+
+		it( 'works when typed before ignored word', () => {
+			setModelData( model, '<paragraph>ignore []ignore</paragraph>' );
+			editor.execute( 'shaxpirSentiment' );
+
+			editor.execute( 'input', { text: 'a' } );
+
+			assertMarkers( 1, '<paragraph>' +
+				'ignore ' +
+				'<sentiment-marker:1:start></sentiment-marker:1:start>aignore<sentiment-marker:1:end></sentiment-marker:1:end>' +
+				'</paragraph>' );
+
+			sinon.assert.calledWith( editor.config.get( 'sentiment' ).getSentimentForWord, 'aignore' );
+		} );
+
 		it( 'creates only one marker when typed multiple letters', () => {
 			setModelData( model, '<paragraph>[]</paragraph>' );
 			editor.execute( 'shaxpirSentiment' );
@@ -173,13 +221,36 @@ describe( 'HighlightEditing', () => {
 			editor.execute( 'input', { text: 'b' } );
 			editor.execute( 'input', { text: 'c' } );
 
+			// @todo: would be nice to improve it in a way, so that marker numbering is reset.
+			// So that instead sentiment-marker:3:start it's sentiment-marker:1:start.
 			assertMarkers( 1, '<paragraph>' +
-				'<sentiment-marker:1:start></sentiment-marker:1:start>abc<sentiment-marker:1:end></sentiment-marker:1:end>' +
+				'<sentiment-marker:3:start></sentiment-marker:3:start>abc<sentiment-marker:3:end></sentiment-marker:3:end>' +
 				'</paragraph>' );
 
 			sinon.assert.calledWith( editor.config.get( 'sentiment' ).getSentimentForWord, 'a' );
 			sinon.assert.calledWith( editor.config.get( 'sentiment' ).getSentimentForWord, 'ab' );
 			sinon.assert.calledWith( editor.config.get( 'sentiment' ).getSentimentForWord, 'abc' );
+		} );
+	} );
+
+	describe( 'mixed text nodes attribute', () => {
+		// This test suite checks whether a single word, split into multiple text items (e.g. due
+		// to fact that part of it is formatted) is handled properly.
+
+		it.skip( 'works with half of a word bolded', () => {
+			// This is not yet supported.
+			setModelData( model, '<paragraph><$text bold="true">foo</$text>ba[]</paragraph>' );
+			editor.execute( 'shaxpirSentiment' );
+			console.log( getModelData( model ) );
+
+			editor.execute( 'input', { text: 'r' } );
+
+			assertMarkers( 1, '<paragraph>' +
+				'<sentiment-marker:2:start></sentiment-marker:2:start>abc<sentiment-marker:2:end></sentiment-marker:2:end>' +
+				'</paragraph>' );
+
+			sinon.assert.calledWith( editor.config.get( 'sentiment' ).getSentimentForWord, 'fooba' );
+			sinon.assert.calledWith( editor.config.get( 'sentiment' ).getSentimentForWord, 'foobar' );
 		} );
 	} );
 
@@ -221,6 +292,104 @@ describe( 'HighlightEditing', () => {
 			editor.execute( 'delete' );
 
 			assertMarkers( 2 );
+		} );
+
+		it( 'backspace to empty content', () => {
+			setModelData( model, '<paragraph>f[]</paragraph>' );
+			editor.execute( 'shaxpirSentiment' );
+
+			editor.execute( 'delete' );
+
+			// assertMarkers( 0 );
+		} );
+	} );
+
+	describe( 'integration', () => {
+		it( 'can type after soft break', () => {
+			setModelData( model, '<paragraph>foo<softBreak></softBreak>[] baz</paragraph>' );
+			editor.execute( 'shaxpirSentiment' );
+
+			editor.execute( 'input', {
+				text: 'f'
+			} );
+
+			assertMarkers( 3 );
+		} );
+	} );
+
+	describe( '_expandRangeToWord', () => {
+		let command;
+
+		beforeEach( () => {
+			command = editor.commands.get( 'shaxpirSentiment' );
+		} );
+
+		it( 'doesn\'t change range where whole word is selected', () => {
+			setModelData( model, '<paragraph>[foo] bar</paragraph>' );
+
+			const range = command._expandRangeToWord( model.document.selection.getFirstRange() );
+
+			expect( stringify( model.document.getRoot(), range ) ).to.eql( '<paragraph>[foo] bar</paragraph>' );
+		} );
+
+		it( 'works with empty surrounding', () => {
+			setModelData( model, '<paragraph>[]</paragraph>' );
+
+			const range = command._expandRangeToWord( model.document.selection.getFirstRange() );
+
+			expect( stringify( model.document.getRoot(), range ) ).to.eql( '<paragraph>[]</paragraph>' );
+		} );
+
+		it( 'works at the end of an element', () => {
+			setModelData( model, '<paragraph>t[]</paragraph>' );
+
+			const range = command._expandRangeToWord( model.document.selection.getFirstRange() );
+
+			expect( stringify( model.document.getRoot(), range ) ).to.eql( '<paragraph>t[]</paragraph>' );
+		} );
+
+		describe( 'expanding left', () => {
+			it( 'expands to left', () => {
+				setModelData( model, '<paragraph>foo ba[r] baz</paragraph>' );
+
+				const range = command._expandRangeToWord( model.document.selection.getFirstRange() );
+
+				expect( stringify( model.document.getRoot(), range ) ).to.eql( '<paragraph>foo [bar] baz</paragraph>' );
+			} );
+
+			it( 'doesnt expand left on space', () => {
+				setModelData( model, '<paragraph>foo bar [baz]</paragraph>' );
+
+				const range = command._expandRangeToWord( model.document.selection.getFirstRange() );
+
+				expect( stringify( model.document.getRoot(), range ) ).to.eql( '<paragraph>foo bar [baz]</paragraph>' );
+			} );
+		} );
+
+		describe( 'expanding right', () => {
+			it( 'expands to right', () => {
+				setModelData( model, '<paragraph>foo [b]ar baz</paragraph>' );
+
+				const range = command._expandRangeToWord( model.document.selection.getFirstRange() );
+
+				expect( stringify( model.document.getRoot(), range ) ).to.eql( '<paragraph>foo [bar] baz</paragraph>' );
+			} );
+
+			it( 'doesnt expand right on space', () => {
+				setModelData( model, '<paragraph>foo [bar] baz</paragraph>' );
+
+				const range = command._expandRangeToWord( model.document.selection.getFirstRange() );
+
+				expect( stringify( model.document.getRoot(), range ) ).to.eql( '<paragraph>foo [bar] baz</paragraph>' );
+			} );
+
+			it( 'expands to right edge case', () => {
+				setModelData( model, '<paragraph>ignore []ignore</paragraph>' );
+
+				const range = command._expandRangeToWord( model.document.selection.getFirstRange() );
+
+				expect( stringify( model.document.getRoot(), range ) ).to.eql( '<paragraph>ignore [ignore]</paragraph>' );
+			} );
 		} );
 	} );
 
