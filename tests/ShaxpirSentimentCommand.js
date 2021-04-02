@@ -4,15 +4,18 @@ import { ShaxpirSentimentCommand } from './../src/plugins/ShaxpirSentimentComman
 import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
 import Input from '@ckeditor/ckeditor5-typing/src/input';
 import Delete from '@ckeditor/ckeditor5-typing/src/delete';
-import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor';
+import ClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
 import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
 
 describe( 'HighlightEditing', () => {
-	let editor, model;
+	let editor, model, editableElement;
 
 	beforeEach( () => {
-		return VirtualTestEditor
-			.create( {
+		editableElement = document.createElement( 'div' );
+		document.body.appendChild( editableElement );
+
+		return ClassicEditor
+			.create( editableElement, {
 				plugins: [ Paragraph, Input, Delete ],
 				sentiment: {
 					getSentimentForWord: sinon.stub().returns( {
@@ -31,7 +34,9 @@ describe( 'HighlightEditing', () => {
 	} );
 
 	afterEach( () => {
-		editor.destroy();
+		editor.destroy().then( () => {
+			editableElement.remove();
+		} );
 	} );
 
 	describe( 'execute()', () => {
