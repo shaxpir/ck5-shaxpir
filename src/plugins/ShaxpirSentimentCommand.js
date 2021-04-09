@@ -2,7 +2,7 @@ import Command from '@ckeditor/ckeditor5-core/src/command';
 import Range from '@ckeditor/ckeditor5-engine/src/model/range';
 
 const MARKER_PREFIX = 'sentiment-marker:';
-const WORD_SEPARATOR_REGEXP = /([^\w]+)/;
+const WORD_SEPARATOR_REGEXP = /([^\w\-]+)/;
 
 export class ShaxpirSentimentCommand extends Command {
 	constructor( editor ) {
