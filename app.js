@@ -67,10 +67,10 @@ function fakeThesaurusCallback(text) {
   return [];
 }
 
-const INTENSE_BLUE = "#2600ff";
-const PALE_BLUE = "#b3a6ff";
-const INTENSE_RED = "#ff0000";
-const PALE_RED = "#ffa6a6";
+const INTENSE_BLUE = "rgb(38, 0, 255)"; const INTENSE_BLUE_SHADOW = "rgb(38, 0, 255, 0.5) 0px 0px 1px";
+const PALE_BLUE = "rgb(179, 166, 255)"; const PALE_BLUE_SHADOW = "rgb(179, 166, 255, 0.5) 0px 0px 1px";
+const INTENSE_RED = "rgb(255, 0, 0)"; const INTENSE_RED_SHADOW = "rgb(255, 0, 0, 0.5) 0px 0px 1px";
+const PALE_RED = "rgb(255, 166, 166)"; const PALE_RED_SHADOW = "rgb(255, 166, 166, 0.5) 0px 0px 1px";
 
 const MAX_STRONGLY_NEGATIVE     = 2.0;
 const MAX_MODERATELY_NEGATIVE   = 4.0;
@@ -90,13 +90,13 @@ function fakeSentimentCallback(word) {
 
   // Assign labels and colors, based on scores
   if (score >= MIN_STRONGLY_POSITIVE) {
-    return { "score" : score, "label" : "Strongly Positive", "color" : INTENSE_BLUE };
+    return { "score" : score, "label" : "Strongly Positive", "color" : INTENSE_BLUE, "shadow" : INTENSE_BLUE_SHADOW };
   } else if (score >= MIN_MODERATELY_POSITIVE) {
-    return { "score" : score, "label" : "Moderately Positive", "color" : PALE_BLUE };
+    return { "score" : score, "label" : "Moderately Positive", "color" : PALE_BLUE, "shadow" : PALE_BLUE_SHADOW };
   } else if (score <= MAX_STRONGLY_NEGATIVE) {
-    return { "score" : score, "label" : "Strongly Negative", "color" : INTENSE_RED };
+    return { "score" : score, "label" : "Strongly Negative", "color" : INTENSE_RED, "shadow" : INTENSE_RED_SHADOW };
   } else if (score <= MAX_MODERATELY_NEGATIVE) {
-    return { "score" : score, "label" : "Moderately Negative", "color" : PALE_RED };
+    return { "score" : score, "label" : "Moderately Negative", "color" : PALE_RED , "shadow" : PALE_RED_SHADOW };
   }
 
   // Words without entries in the dictionary will return null.

@@ -1,6 +1,5 @@
 import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
 import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview';
-import { ShaxpirSentimentCommand } from './ShaxpirSentimentCommand';
 
 import imageIcon from '../../theme/icons/sentiment.svg';
 
@@ -28,12 +27,11 @@ export class ShaxpirSentimentPluginUI extends Plugin {
 			model: 'sentiment-marker',
 			view: ( markerData, conversionApi ) => {
 				const sentimentInfo = editor.commands.get( SENTIMENT_COMMAND_NAME )._resultsMap.get( markerData.markerName );
-
 				return {
 					name: 'span',
 					attributes: {
 						'data-sentiment-score': sentimentInfo.score,
-						'style': 'background-color: ' + sentimentInfo.color
+						'style': `color:${sentimentInfo.color};text-shadow:${sentimentInfo.shadow}`
 					}
 				};
 			}
