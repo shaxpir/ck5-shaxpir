@@ -41,6 +41,7 @@ export class ShaxpirSyncStatusPlugin extends Plugin {
         tooltip : true
       });
       
+      dropdownView.panelPosition = 'n';
       dropdownView.panelView.children.add( this.syncStatusView );
 
       dropdownView.on('change:isOpen', () => {
