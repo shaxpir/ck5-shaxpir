@@ -31,13 +31,6 @@ export class ShaxpirSyncStatusPlugin extends Plugin {
 
     this.syncStatusView = new SyncStatusView(locale, callback);
 
-    // Handle the `Ctrl+S` keystroke and show the panel.
-    editor.keystrokes.set(SYNC_STATUS_KEYSTROKE, (keyEvtData, cancel) => {
-      // Prevent focusing the search bar in FF, Chrome and Edge. See https://github.com/ckeditor/ckeditor5/issues/4811.
-      cancel();
-      this._showUI();
-    });
-
     editor.ui.componentFactory.add('syncStatus', locale => {
 
       const dropdownView = createDropdown( locale );
@@ -57,6 +50,14 @@ export class ShaxpirSyncStatusPlugin extends Plugin {
         } else {
           this.syncStatusView.stopUpdating();
         }
+      });
+
+      // Handle the `Ctrl+S` keystroke and show the panel.
+      editor.keystrokes.set(SYNC_STATUS_KEYSTROKE, (keyEvtData, cancel) => {
+        // Prevent focusing the search bar in FF, Chrome and Edge. See https://github.com/ckeditor/ckeditor5/issues/4811.
+        cancel();
+        // Open the dropdown
+        dropdownView.isOpen = true;
       });
       
       return dropdownView;
