@@ -139,7 +139,7 @@ DecoupledEditor.builtinPlugins = [
 DecoupledEditor.defaultConfig = {
   toolbar: {
     items: [
-      'highlight', 'vividness', 'spellcheck', 'sentiment', 'sentimentToggle',
+      'highlight', 'vividness', 'spellcheck', 'sentimentToggle',
       '|',
       'thesaurus',
       '|',

@@ -2,9 +2,11 @@ import Command from '@ckeditor/ckeditor5-core/src/command';
 import Range from '@ckeditor/ckeditor5-engine/src/model/range';
 
 const MARKER_PREFIX = 'sentiment-marker:';
-const WORD_SEPARATOR_REGEXP = /([^\w\-]+)/;
+const WORD_PATTERN = /[\w\-]+/;
+const WORD_SEPARATOR_PATTERN = /([^\w\-]+)/;
 
 export class ShaxpirSentimentCommand extends Command {
+
 	constructor( editor ) {
 		super( editor );
 
@@ -12,9 +14,11 @@ export class ShaxpirSentimentCommand extends Command {
 
 		this._lastMarkerId = 0;
 
-		this.set( 'isOn', false );
+		this._getSentimentForWord = this.editor.config.get( 'sentiment' ).getSentimentForWord;
 
 		this.editor.model.document.on( 'change:data', this._modelChangeListener.bind( this ) );
+
+		this.set( 'isOn', false );
 	}
 
 	execute() {
@@ -43,26 +47,28 @@ export class ShaxpirSentimentCommand extends Command {
 	_processTextItem( textItem ) {
 		// @todo simplified handling, there's no handling for cases when a word is split into two text items/proxies.
 		// E.g. [foo bar ba][z bom] - ba and z will be treated as two separate words.
-		const parts = textItem.data.split( WORD_SEPARATOR_REGEXP );
+		const parts = textItem.data.split( WORD_SEPARATOR_PATTERN );
 		const model = this.editor.model;
 
 		let currentPartOffset = 0;
 		const { startOffset } = textItem;
 
+
 		for ( const currentPart of parts ) {
-			const isWord = currentPart.length && currentPart[ 0 ].match( /\w/ );
+			const isWord = currentPart.length && currentPart[ 0 ].match( WORD_PATTERN );
 
 			if ( isWord ) {
-				const sentimentScore = this.editor.config.get( 'sentiment' ).getSentimentForWord( currentPart );
+				const sentimentInfo = this._getSentimentForWord( currentPart );
 
-				if ( sentimentScore ) {
+				if ( sentimentInfo ) {
 					model.change( writer => {
 						this._lastMarkerId += 1;
 						const markerName = `${ MARKER_PREFIX }${ this._lastMarkerId }`;
-
-						const start = model.createPositionAt( textItem.parent, startOffset + currentPartOffset );
-						const end = model.createPositionAt( textItem.parent,
-							startOffset + currentPartOffset + currentPart.length );
+						
+						const currentPartStart = startOffset + currentPartOffset;
+						const currentPartEnd = currentPartStart + currentPart.length;
+						const start = model.createPositionAt( textItem.parent, currentPartStart );
+						const end = model.createPositionAt( textItem.parent, currentPartEnd );
 
 						writer.addMarker( markerName, {
 							usingOperation: false,
@@ -70,7 +76,7 @@ export class ShaxpirSentimentCommand extends Command {
 							range: model.createRange( start, end )
 						} );
 
-						this._resultsMap.set( markerName, sentimentScore );
+						this._resultsMap.set( markerName, sentimentInfo );
 					} );
 				}
 			}
@@ -202,7 +208,7 @@ export class ShaxpirSentimentCommand extends Command {
 
 			// Iterate characters one by one as long as there is no word separator.
 			for ( let i = charsToCheck; i > 0; i-- ) {
-				if ( startTextNode.data[ i - 1 ].match( WORD_SEPARATOR_REGEXP ) ) {
+				if ( startTextNode.data[ i - 1 ].match( WORD_SEPARATOR_PATTERN ) ) {
 					break;
 				} else {
 					charsToShift++;
@@ -222,7 +228,7 @@ export class ShaxpirSentimentCommand extends Command {
 
 			// Iterate characters one by one as long as there is no word separator.
 			for ( let i = 0; i < charsToCheck; i++ ) {
-				if ( endTextNode.data[ range.end.offset - endTextNode.startOffset + i ].match( WORD_SEPARATOR_REGEXP ) ) {
+				if ( endTextNode.data[ range.end.offset - endTextNode.startOffset + i ].match( WORD_SEPARATOR_PATTERN ) ) {
 					break;
 				} else {
 					charsToShift++;
