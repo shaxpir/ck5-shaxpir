@@ -48,8 +48,7 @@ export class ShaxpirTypeSizesPlugin extends Plugin {
       dropdownView.toolbarView.isVertical = true;
       dropdownView.toolbarView.ariaLabel = t('Type Sizes');
 
-      // TODO: this isn't working yet, but it should set the drowdown to open ABOVE the toolbar...
-      dropdownView.panelView.position = 'ne';
+      dropdownView.panelPosition = 'n';
 
       // TODO: The active choice should be highlighted as "selected" whenever the dropdown is revealed.
       // The current choice can be retrieved anytime by calling `this._currentValueGetter()`
