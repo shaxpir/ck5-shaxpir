@@ -48,23 +48,22 @@ export class ShaxpirSentimentCommand extends Command {
 		// @todo simplified handling, there's no handling for cases when a word is split into two text items/proxies.
 		// E.g. [foo bar ba][z bom] - ba and z will be treated as two separate words.
 		const parts = textItem.data.split( WORD_SEPARATOR_PATTERN );
-		const model = this.editor.model;
 
 		let currentPartOffset = 0;
-		const { startOffset } = textItem;
+		const startOffset = textItem.startOffset;
+		const model = this.editor.model;
+		model.change( writer => {
+			for ( const currentPart of parts ) {
+				const isWord = currentPart.length && currentPart[ 0 ].match( WORD_PATTERN );
 
+				if ( isWord ) {
+					const sentimentInfo = this._getSentimentForWord( currentPart );
 
-		for ( const currentPart of parts ) {
-			const isWord = currentPart.length && currentPart[ 0 ].match( WORD_PATTERN );
+					if ( sentimentInfo ) {
 
-			if ( isWord ) {
-				const sentimentInfo = this._getSentimentForWord( currentPart );
-
-				if ( sentimentInfo ) {
-					model.change( writer => {
 						this._lastMarkerId += 1;
 						const markerName = `${ MARKER_PREFIX }${ this._lastMarkerId }`;
-						
+
 						const currentPartStart = startOffset + currentPartOffset;
 						const currentPartEnd = currentPartStart + currentPart.length;
 						const start = model.createPositionAt( textItem.parent, currentPartStart );
@@ -77,12 +76,13 @@ export class ShaxpirSentimentCommand extends Command {
 						} );
 
 						this._resultsMap.set( markerName, sentimentInfo );
-					} );
-				}
-			}
 
-			currentPartOffset += currentPart.length;
-		}
+					}
+				}
+
+				currentPartOffset += currentPart.length;
+			}
+		});
 	}
 
 	/**
@@ -95,6 +95,7 @@ export class ShaxpirSentimentCommand extends Command {
 
 		this._removeSentimentMarkers( model.createRangeIn( model.document.getRoot() ) );
 
+		this._resultsMap.clear();
 		this._lastMarkerId = 0;
 	}
 

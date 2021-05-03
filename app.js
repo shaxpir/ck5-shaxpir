@@ -1,5 +1,7 @@
 let GLOBALS = {};
 
+let SENTIMENT_DICTIONARY = getSentimentDictionary();
+
 $(document).ready(function(){
   DecoupledEditor
     .create(
@@ -79,14 +81,12 @@ const MIN_MODERATELY_POSITIVE   = 7.0;
 const MIN_STRONGLY_POSITIVE     = 8.5;
 
 function fakeSentimentCallback(word) {
-  console.log(`sentiment, getting score for word: ${word}`);
 
   // Normalize the text  (trim, lowercase, and normalize apostrophes)
   word = word.trim().toLowerCase().replace(/[\u2018\u2019]/g, "'");
 
   // Lookup the score in the dictionary
-  let dictionary = getSentimentDictionary();
-  let score = dictionary[word];
+  let score = SENTIMENT_DICTIONARY[word];
 
   // Assign labels and colors, based on scores
   if (score >= MIN_STRONGLY_POSITIVE) {
