@@ -56,6 +56,7 @@ import TodoList from '@ckeditor/ckeditor5-list/src/todolist';
 import WordCount from '@ckeditor/ckeditor5-word-count/src/wordcount';
 
 import { ShaxpirLinguisticHighlightPlugin } from './plugins/ShaxpirLinguisticHighlightPlugin.js';
+import { ShaxpirSceneBreakPlugin } from './plugins/ShaxpirSceneBreakPlugin.js';
 import { ShaxpirSentimentPlugin } from './plugins/ShaxpirSentimentPlugin.js';
 import { ShaxpirSyncStatusPlugin } from './plugins/ShaxpirSyncStatusPlugin.js';
 import { ShaxpirThemeSwitcherPlugin } from './plugins/ShaxpirThemeSwitcherPlugin.js';
@@ -126,6 +127,7 @@ DecoupledEditor.builtinPlugins = [
   TodoList,
   WordCount,
 
+  ShaxpirSceneBreakPlugin,
   ShaxpirSentimentPlugin,
   ShaxpirSyncStatusPlugin,
   ShaxpirThemeSwitcherPlugin,
@@ -151,7 +153,7 @@ DecoupledEditor.defaultConfig = {
       '|',
       'alignment',
       '|',
-      'indent', 'outdent', 'numberedList', 'bulletedList', 'todoList', 'blockquote', 'horizontalLine',
+      'indent', 'outdent', 'numberedList', 'bulletedList', 'todoList', 'blockquote', 'shaxpirSceneBreak', 'horizontalLine',
       '|',
       /*
       'fontfamily', 'fontsize', 'fontColor', 'fontBackgroundColor',

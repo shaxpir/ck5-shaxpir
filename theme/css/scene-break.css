@@ -1,0 +1,19 @@
+.ck-editor__editable .ck-scene-break {
+	display: flow-root;
+}
+
+.ck-content hr.ck-scene-break {
+	margin: 15px 0;
+	height: 2px;
+	background: #c2081d;
+	border: 0;
+}
+
+/* TODO: doesn't work yet */
+/*
+.ck-content hr.ck-scene-break:before {
+	text-align: center;
+	display: block;
+    content: "* * *";
+}
+*/
