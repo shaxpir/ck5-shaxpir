@@ -1,11 +1,11 @@
 import Command from '@ckeditor/ckeditor5-core/src/command';
 import Range from '@ckeditor/ckeditor5-engine/src/model/range';
 
-const MARKER_PREFIX = 'sentiment-marker:';
-const WORD_PATTERN = /[\w\-]+/;
-const WORD_SEPARATOR_PATTERN = /([^\w\-]+)/;
+const MARKER_PREFIX = 'linguistic-marker:';
+const WORD_PATTERN = /[\w\-'‘’]+/;
+const WORD_SEPARATOR_PATTERN = /([^\w\-'‘’]+)/;
 
-export class ShaxpirSentimentCommand extends Command {
+export class ShaxpirLinguisticHighlightCommand extends Command {
 
 	constructor( editor ) {
 		super( editor );
@@ -14,26 +14,38 @@ export class ShaxpirSentimentCommand extends Command {
 
 		this._lastMarkerId = 0;
 
-		this._getSentimentForWord = this.editor.config.get( 'sentiment' ).getSentimentForWord;
+		let pluginConfig = this.editor.config.get( 'linguistics' );
+		this._analyzeWord = pluginConfig.analyzeWord;
 
 		this.editor.model.document.on( 'change:data', this._modelChangeListener.bind( this ) );
 
-		this.set( 'isOn', false );
+		this.set( 'isSentimentOn', false );
+		this.set( 'isVividnessOn', false );
+		this.set( 'isPassiveVoiceOn', false );
+		this.set( 'isAdverbsOn', false );
 	}
 
 	execute() {
 		const model = this.editor.model;
 		const modelRoot = model.document.getRoot();
 
-		const newOnValue = !this.isOn;
+		// TODO: whenver ANY of the highlight rules are toggled on, apply a "light grey" style to all text in the editor,
+		// so that non-highlighted text fades into the background a bit.
 
-		if ( newOnValue ) {
+		// TODO: Don't start from scratch. Clear markers for highlight-rules that just got
+		// toggled off, and only add new markers for highlight-rules that just got toggled on.
+
+		this._clearAllMarkers();
+		if ( this.isAnyOn ) {
 			this._doCheck( model.createRangeIn( modelRoot ) );
-		} else {
-			this._clearSentimentMarkers();
 		}
+	}
 
-		this.isOn = newOnValue;
+	get isAnyOn() {
+		return this.isVividnessOn
+		    || this.isPassiveVoiceOn
+	        || this.isSentimentOn
+		    || this.isAdverbsOn;
 	}
 
 	_doCheck( range ) {
@@ -57,25 +69,28 @@ export class ShaxpirSentimentCommand extends Command {
 				const isWord = currentPart.length && currentPart[ 0 ].match( WORD_PATTERN );
 
 				if ( isWord ) {
-					const sentimentInfo = this._getSentimentForWord( currentPart );
+					let word = currentPart;
+					const analysis = this._analyzeWord( word );
 
-					if ( sentimentInfo ) {
+					if ( this._shouldHighlightWord( analysis ) ) {
 
 						this._lastMarkerId += 1;
 						const markerName = `${ MARKER_PREFIX }${ this._lastMarkerId }`;
 
 						const currentPartStart = startOffset + currentPartOffset;
-						const currentPartEnd = currentPartStart + currentPart.length;
-						const start = model.createPositionAt( textItem.parent, currentPartStart );
-						const end = model.createPositionAt( textItem.parent, currentPartEnd );
+						const currentPartEnd = currentPartStart + word.length;
 
+						const wordStart = model.createPositionAt( textItem.parent, currentPartStart );
+						const wordEnd = model.createPositionAt( textItem.parent, currentPartEnd );
 						writer.addMarker( markerName, {
 							usingOperation: false,
 							affectsData: false,
-							range: model.createRange( start, end )
+							range: model.createRange( wordStart, wordEnd )
 						} );
 
-						this._resultsMap.set( markerName, sentimentInfo );
+						// TODO: maybe we should include 'sentiment' or 'vividness' (etc) in the marker name, to help
+						// with clearning some markers but not others, when the various highliters are toggled off and on. 
+						this._resultsMap.set( markerName, analysis );
 
 					}
 				}
@@ -85,32 +100,41 @@ export class ShaxpirSentimentCommand extends Command {
 		});
 	}
 
-	/**
-	 * Removes all the existing sentiment markers from model.
-	 *
-	 * @private
-	 */
-	_clearSentimentMarkers() {
+	_shouldHighlightWord( analysis ) {
+		if (analysis) {
+			if (this.isVividnessOn && analysis.vividness) {
+				return true;
+			}
+			if (this.isSentimentOn && analysis.sentiment) {
+				return true;
+			}
+			if (analysis.partOfSpeech) {
+				const pos = analysis.partOfSpeech.type;
+				if (this.isPassiveVoiceOn && analysis.partOfSpeech.type === "PASSIVE") {
+					return true;
+				}
+				if (this.isAdverbsOn && analysis.partOfSpeech.type === "ADVERB") {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	 _clearAllMarkers() {
 		const model = this.editor.model;
 
-		this._removeSentimentMarkers( model.createRangeIn( model.document.getRoot() ) );
+		this._removeMarkersInRange( model.createRangeIn( model.document.getRoot() ) );
 
 		this._resultsMap.clear();
 		this._lastMarkerId = 0;
 	}
 
-	/**
-	 * Removes all the existing markers intersecting with a given model `range`.
-	 *
-	 * @param {module:engine/model/range~Range} range
-	 * @returns {module:engine/model/range~Range|null} A range spanned over content where the markers were removed or `null` if no
-	 * markers were removed.
-	 */
-	_removeSentimentMarkers( range ) {
+	_removeMarkersInRange( range ) {
 		const model = this.editor.model;
 		let modifiedRange = null;
 
-		// @todo: this helps with typing at the end/beginning of existing sentiment marker. But such implementation have a risk of invalid offsets.
+		// @todo: this helps with typing at the end/beginning of existing marker. But such implementation have a risk of invalid offsets.
 		try {
 			if ( range.start.textNode && range.start.compareWith( model.createPositionBefore( range.start.textNode ) ) == 'after' ) {
 					range = model.createRange(
@@ -143,7 +167,7 @@ export class ShaxpirSentimentCommand extends Command {
 				model.change( writer => {
 					writer.removeMarker( marker );
 
-					// We can't delete the sentiment data from resultsMap synchronously, as this method might be executed within
+					// We can't delete the analysis data from resultsMap synchronously, as this method might be executed within
 					// yet another model.change() closure.
 					// This means that writer.removeMarker() call will NOT be executed synchronously. And other bits of code might
 					// still operate on the marker.
@@ -157,7 +181,7 @@ export class ShaxpirSentimentCommand extends Command {
 	}
 
 	_modelChangeListener() {
-		if ( !this.isOn ) {
+		if ( !this.isAnyOn ) {
 			return;
 		}
 
@@ -178,7 +202,7 @@ export class ShaxpirSentimentCommand extends Command {
 			range = this._expandRangeToWord( range );
 
 			// In any case first remove markers in modified range.
-			const removedRange = this._removeSentimentMarkers( range );
+			const removedRange = this._removeMarkersInRange( range );
 
 			// Search modified content for any highlightable items.
 			this._doCheck( removedRange ? range.getJoined( removedRange ) : range );

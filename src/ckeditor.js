@@ -1,17 +1,5 @@
-/*
-   NOTE:
-
-   This file was copied from here...
-
-     https://github.com/ckeditor/ckeditor5-build-decoupled-document/blob/master/src/ckeditor.js
-   
-   ...but I added 'HorizontalLine', 'TodoList', and 'WordCount' plugins, and re-ordered the toolbar buttons
- */
-
-/**
- * @license Copyright (c) 2003-2020, CKSource - Frederico Knabben. All rights reserved.
- * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
- */
+// NOTE: This file is based on the original from here...
+//       https://github.com/ckeditor/ckeditor5-build-decoupled-document/blob/master/src/ckeditor.js
 
 // The editor creator to use.
 import DecoupledEditorBase from '@ckeditor/ckeditor5-editor-decoupled/src/decouplededitor';
@@ -57,7 +45,7 @@ import WordCount from '@ckeditor/ckeditor5-word-count/src/wordcount';
 
 import { ShaxpirLinguisticHighlightPlugin } from './plugins/ShaxpirLinguisticHighlightPlugin.js';
 import { ShaxpirSceneBreakPlugin } from './plugins/ShaxpirSceneBreakPlugin.js';
-import { ShaxpirSentimentPlugin } from './plugins/ShaxpirSentimentPlugin.js';
+import { ShaxpirSearchPlugin } from './plugins/ShaxpirSearchPlugin.js';
 import { ShaxpirSyncStatusPlugin } from './plugins/ShaxpirSyncStatusPlugin.js';
 import { ShaxpirThemeSwitcherPlugin } from './plugins/ShaxpirThemeSwitcherPlugin.js';
 import { ShaxpirTypeFacesPlugin } from './plugins/ShaxpirTypeFacesPlugin.js';
@@ -66,28 +54,6 @@ import { ShaxpirThesaurusPlugin } from './plugins/ShaxpirThesaurusPlugin.js';
 
 export default class DecoupledEditor extends DecoupledEditorBase {}
 
-// TODO: external UI
-// https://ckeditor.com/docs/ckeditor5/latest/framework/guides/deep-dive/ui/external-ui.html
-
-// NOTE: document edtior?
-// https://ckeditor.com/docs/ckeditor5/latest/framework/guides/deep-dive/ui/document-editor.html
-
-// TODO: multi-root editor
-// https://ckeditor.com/docs/ckeditor5/latest/framework/guides/deep-dive/ui/custom-editor-creator.html
-
-// TODO: theme customization
-// https://ckeditor.com/docs/ckeditor5/latest/framework/guides/deep-dive/ui/theme-customization.html
-
-// LEARN MORE ABOUT: focus-tracking
-// https://ckeditor.com/docs/ckeditor5/latest/framework/guides/deep-dive/ui/focus-tracking.html
-
-// LEARN MORE ABOUT: widgets
-// https://ckeditor.com/docs/ckeditor5/latest/framework/guides/deep-dive/ui/widget-internals.html
-
-// CUSTOMIZING EDITOR OUTPUT
-// https://ckeditor.com/docs/ckeditor5/latest/framework/guides/deep-dive/conversion/conversion-extending-output.html
-
-// Plugins to include in the build.
 DecoupledEditor.builtinPlugins = [
   Essentials,
   Alignment,
@@ -127,21 +93,21 @@ DecoupledEditor.builtinPlugins = [
   TodoList,
   WordCount,
 
+  ShaxpirLinguisticHighlightPlugin,
   ShaxpirSceneBreakPlugin,
-  ShaxpirSentimentPlugin,
+  ShaxpirSearchPlugin,
   ShaxpirSyncStatusPlugin,
   ShaxpirThemeSwitcherPlugin,
   ShaxpirTypeFacesPlugin,
   ShaxpirTypeSizesPlugin,
   ShaxpirThesaurusPlugin,
-  ShaxpirLinguisticHighlightPlugin,
 ];
 
 // Editor configuration.
 DecoupledEditor.defaultConfig = {
   toolbar: {
     items: [
-      'highlight', 'vividness', 'spellcheck', 'sentimentToggle',
+      'search', 'vividnessToggle', 'sentimentToggle', 'passiveVoiceToggle', 'adverbsToggle', /* 'spellcheck', */
       '|',
       'thesaurus',
       '|',
