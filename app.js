@@ -116,6 +116,7 @@ function fakeWordAnalysis(word) {
   let sentimentInfo = getSentimentOf(word);
   let vividnessInfo = getVividnessOf(word);
   let partOfSpeechInfo = getPartOfSpeech(word);
+  let spellCheckInfo = getSpellCheck(originalWord);
 
   let isEmpty = true;
   let result = { "word" : originalWord };
@@ -129,6 +130,10 @@ function fakeWordAnalysis(word) {
   }
   if (partOfSpeechInfo) {
     result.partOfSpeech = partOfSpeechInfo;
+    isEmpty = false;
+  }
+  if (spellCheckInfo) {
+    result.spellCheck = spellCheckInfo;
     isEmpty = false;
   }
 
@@ -251,6 +256,17 @@ function getPartOfSpeech(word) {
     };
   }
   return null;
+}
+
+function getSpellCheck(word) {
+  // TODO: do case-matching between the original word and the suggested replacements.
+  if (word.toLowerCase() === "hte") {
+    return {
+      "color" : "rgb(255,0,30)",
+      "shadow" : "rgba(255,0,30, 0.5) 0px 0px 1px",
+      "suggestions" : [ "the", "het", "hat", "heat" ],
+    };
+  }
 }
 
 function makeLookupTable(words) {

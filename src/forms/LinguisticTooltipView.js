@@ -3,19 +3,17 @@ import KeystrokeHandler from '@ckeditor/ckeditor5-utils/src/keystrokehandler';
 
 import '../../theme/css/linguistic-tooltip.css';
 
-const DEFAULT_PARTOFSPEECH_COLOR = "#000";
+const DEFAUL_COLOR = "#000";
+const DEFAULT_DISPLAY = "none";
+
+const DEFAULT_SPELLCHECK_LABEL = "Spell Check";
 const DEFAULT_PARTOFSPEECH_LABEL = "ANALYSIS";
-const DEFAULT_PARTOFSPEECH_DISPLAY = "none";
 
-const DEFAULT_SENTIMENT_COLOR = "#000";
 const DEFAULT_SENTIMENT_LABEL = "Sentiment Neutral";
-const DEFAULT_SENTIMENT_SCORE = 5.5;
-const DEFAULT_SENTIMENT_DISPLAY = "none";
-
-const DEFAULT_VIVIDNESS_COLOR = "#000";
 const DEFAULT_VIVIDNESS_LABEL = "Not Vivid";
+
+const DEFAULT_SENTIMENT_SCORE = 5.5;
 const DEFAULT_VIVIDNESS_SCORE = 0.0;
-const DEFAULT_VIVIDNESS_DISPLAY = "none";
 
 export default class LinguisticTooltipView extends View {
 
@@ -25,19 +23,23 @@ export default class LinguisticTooltipView extends View {
     this.keystrokes = new KeystrokeHandler();
     const bind = this.bindTemplate;
 
+    this.set('spellCheckLabel', DEFAULT_SPELLCHECK_LABEL);
+    this.set('spellCheckColor', DEFAUL_COLOR);
+    this.set('spellCheckDisplay', DEFAULT_DISPLAY);
+
     this.set('partOfSpeechLabel', DEFAULT_PARTOFSPEECH_LABEL);
-    this.set('partOfSpeechColor', DEFAULT_PARTOFSPEECH_COLOR);
-    this.set('partOfSpeechDisplay', DEFAULT_PARTOFSPEECH_DISPLAY);
+    this.set('partOfSpeechColor', DEFAUL_COLOR);
+    this.set('partOfSpeechDisplay', DEFAULT_DISPLAY);
     
     this.set('sentimentLabel', DEFAULT_SENTIMENT_LABEL);
     this.set('sentimentScore', DEFAULT_SENTIMENT_SCORE);
-    this.set('sentimentColor', DEFAULT_SENTIMENT_COLOR);
-    this.set('sentimentDisplay', DEFAULT_SENTIMENT_DISPLAY);
+    this.set('sentimentColor', DEFAUL_COLOR);
+    this.set('sentimentDisplay', DEFAULT_DISPLAY);
 
     this.set('vividnessLabel', DEFAULT_VIVIDNESS_LABEL);
     this.set('vividnessScore', DEFAULT_VIVIDNESS_SCORE);
-    this.set('vividnessColor', DEFAULT_VIVIDNESS_COLOR);
-    this.set('vividnessDisplay', DEFAULT_VIVIDNESS_DISPLAY);
+    this.set('vividnessColor', DEFAUL_COLOR);
+    this.set('vividnessDisplay', DEFAULT_DISPLAY);
     
     this.setTemplate({
       tag: 'div',
@@ -93,42 +95,72 @@ export default class LinguisticTooltipView extends View {
             { text : ": " },
             { text: bind.to( 'vividnessScore' ) }
           ]
+        },
+
+        {
+          tag: 'div',
+          attributes: {
+            style: [
+              bind.to('spellCheckColor', c => 'color:' + c ),
+              ";",
+              bind.to('spellCheckDisplay', d => 'display:' + d)
+            ],
+            class: [ 'ck', 'ck-linguistic-tooltip-details' ],
+          },
+          children: [
+            { text : bind.to( 'spellCheckLabel' ) },
+          ]
         }
       ]
     });
   }
 
   setAnalysisDetails(command, analysis) {
+    // Set all values to their defaults
+    this.spellCheckLabel = DEFAULT_SPELLCHECK_LABEL;
+    this.spellCheckColor = DEFAUL_COLOR;
+    this.spellCheckDisplay = DEFAULT_DISPLAY;
+    this.partOfSpeechLabel = DEFAULT_PARTOFSPEECH_LABEL;
+    this.partOfSpeechColor = DEFAUL_COLOR;
+    this.partOfSpeechDisplay = DEFAULT_DISPLAY;
+    this.sentimentLabel = DEFAULT_SENTIMENT_LABEL;
+    this.sentimentScore = DEFAULT_SENTIMENT_SCORE;
+    this.sentimentColor = DEFAUL_COLOR;
+    this.sentimentDisplay = DEFAULT_DISPLAY;
+    this.vividnessLabel = DEFAULT_VIVIDNESS_LABEL;
+    this.vividnessColor = DEFAUL_COLOR;
+    this.vividnessScore = DEFAUL_COLOR;
+    this.vividnessDisplay = DEFAULT_DISPLAY;
+    // Set values for the highlight rules we actually care about.
     if (analysis.partOfSpeech && (command.isPassiveVoiceOn || command.isAdverbsOn)) {
       this.partOfSpeechLabel = analysis.partOfSpeech.label;
       this.partOfSpeechColor = analysis.partOfSpeech.color;
       this.partOfSpeechDisplay = 'block';
-    } else {
-      this.partOfSpeechLabel = DEFAULT_PARTOFSPEECH_LABEL;
-      this.partOfSpeechColor = DEFAULT_PARTOFSPEECH_COLOR;
-      this.partOfSpeechDisplay = DEFAULT_PARTOFSPEECH_DISPLAY;
     }
     if (command.isSentimentOn && analysis.sentiment) {
       this.sentimentLabel = analysis.sentiment.label;
       this.sentimentColor = analysis.sentiment.color;
       this.sentimentScore = analysis.sentiment.score;
       this.sentimentDisplay = 'block';
-    } else {
-      this.sentimentLabel = DEFAULT_SENTIMENT_LABEL;
-      this.sentimentScore = DEFAULT_SENTIMENT_SCORE;
-      this.sentimentColor = DEFAULT_SENTIMENT_COLOR;
-      this.sentimentDisplay = DEFAULT_SENTIMENT_DISPLAY;
     }
     if (command.isVividnessOn && analysis.vividness) {
       this.vividnessLabel = analysis.vividness.label;
       this.vividnessColor = analysis.vividness.color;
       this.vividnessScore = analysis.vividness.score;
       this.vividnessDisplay = 'block';
-    } else {
-      this.vividnessLabel = DEFAULT_VIVIDNESS_LABEL;
-      this.vividnessColor = DEFAULT_VIVIDNESS_COLOR;
-      this.vividnessScore = DEFAULT_VIVIDNESS_SCORE;
-      this.vividnessDisplay = DEFAULT_VIVIDNESS_DISPLAY;
+    }
+    if (command.isSpellCheckOn && analysis.spellCheck) {
+      // TODO: show some suggestions
+      // TODO: if there are no suggestions, show a message
+      // TODO: handle suggestion clicks
+      this.spellCheckColor = analysis.spellCheck.color;
+      this.spellCheckLabel = JSON.stringify(analysis.spellCheck.suggestions);
+      this.spellCheckDisplay = 'block';
+
+      // Don't display anything else, if this is a misspelling.
+      this.partOfSpeechDisplay = DEFAULT_DISPLAY;
+      this.sentimentDisplay = DEFAULT_DISPLAY;
+      this.vividnessDisplay = DEFAULT_DISPLAY;
     }
   }
 }

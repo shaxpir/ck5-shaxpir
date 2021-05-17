@@ -19,6 +19,7 @@ export class ShaxpirLinguisticHighlightCommand extends Command {
 
 		this.editor.model.document.on( 'change:data', this._modelChangeListener.bind( this ) );
 
+		this.set( 'isSpellCheckOn', false );
 		this.set( 'isSentimentOn', false );
 		this.set( 'isVividnessOn', false );
 		this.set( 'isPassiveVoiceOn', false );
@@ -42,7 +43,8 @@ export class ShaxpirLinguisticHighlightCommand extends Command {
 	}
 
 	get isAnyOn() {
-		return this.isVividnessOn
+		return this.isSpellCheckOn
+		    || this.isVividnessOn
 		    || this.isPassiveVoiceOn
 	        || this.isSentimentOn
 		    || this.isAdverbsOn;
@@ -102,6 +104,9 @@ export class ShaxpirLinguisticHighlightCommand extends Command {
 
 	_shouldHighlightWord( analysis ) {
 		if (analysis) {
+			if (this.isSpellCheckOn && analysis.spellCheck) {
+				return true;
+			}
 			if (this.isVividnessOn && analysis.vividness) {
 				return true;
 			}

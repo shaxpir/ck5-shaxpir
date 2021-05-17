@@ -10,6 +10,7 @@ import sentimentIcon from '../../theme/icons/sentiment.svg';
 import vividnessIcon from '../../theme/icons/vividness.svg';
 import passiveVoiceIcon from '../../theme/icons/passive-voice.svg';
 import adverbsIcon from '../../theme/icons/adverbs.svg';
+import spellCheckIcon from '../../theme/icons/spellcheck.svg';
 
 const MARKER_PREFIX = 'linguistic-marker:';
 const COMMAND_NAME = 'shaxpirLinguisticHighlight';
@@ -80,6 +81,7 @@ export class ShaxpirLinguisticHighlightPluginUI extends Plugin {
             view: ( markerData, conversionApi ) => {
                 const command = editor.commands.get( COMMAND_NAME );
                 const analysis = command._resultsMap.get( markerData.markerName );
+                // TODO: spell-check stying should have squiggly underlines, or something...
                 const color = this._getColorForHighlight(command, analysis);
                 const shadow = this._getShadowForHighlight(command, analysis);
                 return {
@@ -164,6 +166,24 @@ export class ShaxpirLinguisticHighlightPluginUI extends Plugin {
                 editor.editing.view.focus();
             } );
             button.bind( 'isOn' ).to( command, 'isVividnessOn' );
+            return button;
+        } );
+
+        editor.ui.componentFactory.add( 'spellcheckToggle', locale => {
+            const button = new ButtonView( locale );
+            const command = editor.commands.get( COMMAND_NAME );
+            button.set( {
+                icon: spellCheckIcon,
+                isEnabled: true,
+                label: t( 'Spell Check' ),
+                tooltip: true
+            } );
+            button.on( 'execute', () => {
+                command.isSpellCheckOn = !command.isSpellCheckOn;
+                editor.execute( COMMAND_NAME );
+                editor.editing.view.focus();
+            } );
+            button.bind( 'isOn' ).to( command, 'isSpellCheckOn' );
             return button;
         } );
     }
@@ -271,6 +291,9 @@ export class ShaxpirLinguisticHighlightPluginUI extends Plugin {
 
     _getColorForHighlight(command, analysis) {
         if (analysis) {
+            if (command.isSpellCheckOn && analysis.spellCheck) {
+                return analysis.spellCheck.color;
+            }
             if (command.isSentimentOn && analysis.sentiment) {
                 return analysis.sentiment.color;
             }
@@ -292,6 +315,9 @@ export class ShaxpirLinguisticHighlightPluginUI extends Plugin {
 
     _getShadowForHighlight(command, analysis) {
         if (analysis) {
+            if (command.isSpellCheckOn && analysis.spellCheck) {
+                return analysis.spellCheck.shadow;
+            }
             if (command.isSentimentOn && analysis.sentiment) {
                 return analysis.sentiment.shadow;
             }

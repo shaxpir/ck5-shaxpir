@@ -43,6 +43,8 @@ import HorizontalLine from '@ckeditor/ckeditor5-horizontal-line/src/horizontalli
 import TodoList from '@ckeditor/ckeditor5-list/src/todolist';
 import WordCount from '@ckeditor/ckeditor5-word-count/src/wordcount';
 
+import WProofreader from '@webspellchecker/wproofreader-ckeditor5/src/wproofreader';
+
 import { ShaxpirLinguisticHighlightPlugin } from './plugins/ShaxpirLinguisticHighlightPlugin.js';
 import { ShaxpirSceneBreakPlugin } from './plugins/ShaxpirSceneBreakPlugin.js';
 import { ShaxpirSearchPlugin } from './plugins/ShaxpirSearchPlugin.js';
@@ -107,9 +109,9 @@ DecoupledEditor.builtinPlugins = [
 DecoupledEditor.defaultConfig = {
   toolbar: {
     items: [
-      'search', 'vividnessToggle', 'sentimentToggle', 'passiveVoiceToggle', 'adverbsToggle', /* 'spellcheck', */
+      'search', 'vividnessToggle', 'sentimentToggle', 'passiveVoiceToggle', 'adverbsToggle',
       '|',
-      'thesaurus',
+      'spellcheckToggle', 'thesaurus',
       '|',
       'syncStatus', 'themes', 'typefaces', 'typesizes',
       '|',
@@ -133,6 +135,10 @@ DecoupledEditor.defaultConfig = {
       */
      'undo', 'redo'
     ]
+  },
+  wproofreader: {
+    serviceId: 'QapIf8lpTO6Yxrs',
+    srcUrl: 'https://svc.webspellchecker.net/spellcheck31/wscbundle/wscbundle.js'
   },
   image: {
     styles: [
