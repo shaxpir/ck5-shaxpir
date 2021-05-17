@@ -1,7 +1,14 @@
+div.ck.ck-linguistic-tooltip {
+  margin: 4px;
+}
+
 div.ck.ck-linguistic-tooltip-details {
   font-family: var(--chrome-font-family);
+  text-align:center;
+  font-size: 14px;
+  text-transform: uppercase;
   margin-left: 15px;
   margin-right: 15px;
-  margin-top: 3px;
-  margin-bottom: 3px;     
+  margin-top: 0px;
+  margin-bottom: 0px;
 }

@@ -187,23 +187,7 @@ export class ShaxpirLinguisticHighlightPluginUI extends Plugin {
         const command = editor.commands.get( COMMAND_NAME );
         const analysis = command._resultsMap.get( marker.name );
 
-        // TODO: make a customized tooltip for these different scenarios
-        if (command.isSentimentOn && analysis.sentiment) {
-            this.linguisticTooltipView.setHeading(t("SENTIMENT"));
-            this.linguisticTooltipView.setScore(analysis.sentiment.score);
-            this.linguisticTooltipView.setLabel(analysis.sentiment.label);
-            this.linguisticTooltipView.setColor(analysis.sentiment.color);
-        } else if (command.isVividnessOn && analysis.vividness) {
-            this.linguisticTooltipView.setHeading(t("VIVIDNESS"));
-            this.linguisticTooltipView.setScore(analysis.vividness.score);
-            this.linguisticTooltipView.setLabel(analysis.vividness.label);
-            this.linguisticTooltipView.setColor(analysis.vividness.color);
-        } else if ((command.isAdverbsOn || command.isPassiveVoiceOn) && analysis.partOfSpeech) {
-            this.linguisticTooltipView.setHeading(t("PART OF SPEECH"));
-            this.linguisticTooltipView.setScore(1.0); // delete me
-            this.linguisticTooltipView.setLabel(analysis.partOfSpeech.label);
-            this.linguisticTooltipView.setColor(analysis.partOfSpeech.color);
-        }
+        this.linguisticTooltipView.setAnalysisDetails( command, analysis );
 
         if (!this._balloon.hasView(this.linguisticTooltipView)) {
             this._balloon.add({
