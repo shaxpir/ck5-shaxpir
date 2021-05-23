@@ -1,3 +1,5 @@
+import { inspect } from 'util';
+
 import Command from '@ckeditor/ckeditor5-core/src/command';
 import Range from '@ckeditor/ckeditor5-engine/src/model/range';
 
@@ -79,6 +81,8 @@ export class ShaxpirLinguisticHighlightCommand extends Command {
 						this._lastMarkerId += 1;
 						const markerName = `${ MARKER_PREFIX }${ this._lastMarkerId }`;
 
+						console.log(`creating marker ${markerName} for word ${word}`);
+
 						const currentPartStart = startOffset + currentPartOffset;
 						const currentPartEnd = currentPartStart + word.length;
 
@@ -139,19 +143,23 @@ export class ShaxpirLinguisticHighlightCommand extends Command {
 		const model = this.editor.model;
 		let modifiedRange = null;
 
+		console.log("_removeMarkersInRange for range: " + inspect(range));
+
 		// @todo: this helps with typing at the end/beginning of existing marker. But such implementation have a risk of invalid offsets.
 		try {
 			if ( range.start.textNode && range.start.compareWith( model.createPositionBefore( range.start.textNode ) ) == 'after' ) {
-					range = model.createRange(
-						range.start.getShiftedBy( -1 ),
-						range.end
-					);
+				console.log("expanding range backward");
+				range = model.createRange(
+					range.start.getShiftedBy( -1 ),
+					range.end
+				);
 			}
 		} catch ( err ) {
 		}
 
 		try {
 			if ( range.end.textNode && range.end.compareWith( model.createPositionAfter( range.end.textNode ) ) == 'before' ) {
+				console.log("expanding range forward");
 				// Checks whether end position is in text node, and whether it's before the end of this text node.
 				range = model.createRange(
 					range.start,
@@ -161,7 +169,11 @@ export class ShaxpirLinguisticHighlightCommand extends Command {
 		} catch ( err ) {
 		}
 
+		console.log("expanded range: " + inspect(range));
+
 		for ( const marker of model.markers.getMarkersIntersectingRange( range ) ) {
+			console.log("HUH????");
+			console.log("marker intersects expanded range: " + inspect(marker));
 			if ( marker.name.startsWith( MARKER_PREFIX ) ) {
 				if ( !modifiedRange ) {
 					modifiedRange = marker.getRange();
@@ -177,7 +189,11 @@ export class ShaxpirLinguisticHighlightCommand extends Command {
 					// This means that writer.removeMarker() call will NOT be executed synchronously. And other bits of code might
 					// still operate on the marker.
 					// E.g. during the development there were cases that editingDowncast's markerToHighlight converter was called.
-					this.editor.model.document.once( 'change:data', () => this._resultsMap.delete( marker.name ) );
+					this.editor.model.document.once( 'change:data', () => {
+						console.log("WHAAAAAAAT????");
+						console.log("deleting _resultsMap entry for marker: " + marker.name);
+						this._resultsMap.delete( marker.name );
+					});
 				} );
 			}
 		}
@@ -194,7 +210,7 @@ export class ShaxpirLinguisticHighlightCommand extends Command {
 		const changes = Array.from( model.document.differ.getChanges() );
 
 		for ( const entry of changes ) {
-			if ( [ 'insert', 'remove' ].includes( entry.type ) == false ) {
+			if ( entry.type !== 'insert' && entry.type != 'remove' ) {
 				continue;
 			}
 

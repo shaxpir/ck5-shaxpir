@@ -1,10 +1,14 @@
+import { inspect } from 'util';
+
 import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
 import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview';
 import ClickObserver from '@ckeditor/ckeditor5-engine/src/view/observer/clickobserver';
 import clickOutsideHandler from '@ckeditor/ckeditor5-ui/src/bindings/clickoutsidehandler';
 import ContextualBalloon from '@ckeditor/ckeditor5-ui/src/panel/balloon/contextualballoon';
 
+import HeaderBodyView from '../forms/HeaderBodyView';
 import LinguisticTooltipView from '../forms/LinguisticTooltipView';
+import ReplacementSuggestionListView from '../forms/ReplacementSuggestionListView';
 
 import sentimentIcon from '../../theme/icons/sentiment.svg';
 import vividnessIcon from '../../theme/icons/vividness.svg';
@@ -37,6 +41,11 @@ export class ShaxpirLinguisticHighlightPluginUI extends Plugin {
         editor.editing.view.addObserver(ClickObserver);
 
         this.linguisticTooltipView = new LinguisticTooltipView(locale);
+        this.spellCheckNoSuggestionsView = new HeaderBodyView(locale, t("SPELL CHECK"), t("No Suggestions."));
+        this.spellCheckSuggestionsListView = new ReplacementSuggestionListView(
+          locale, t("SPELL CHECK"), "#000", [], (replacement) => {}
+        );
+
         this._balloon = editor.plugins.get(ContextualBalloon);
 
         const viewDocument = this.editor.editing.view.document;
@@ -75,7 +84,6 @@ export class ShaxpirLinguisticHighlightPluginUI extends Plugin {
     }
 
     addConversion( editor ) {
-        const command = editor.commands.get( COMMAND_NAME );
         editor.conversion.for( 'editingDowncast' ).markerToHighlight( {
             model: 'linguistic-marker',
             view: ( markerData, conversionApi ) => {
@@ -189,11 +197,15 @@ export class ShaxpirLinguisticHighlightPluginUI extends Plugin {
     }
 
     get hasView() {
-        return this._balloon.hasView(this.linguisticTooltipView);
+        return this._balloon.hasView(this.linguisticTooltipView)
+            || this._balloon.hasView(this.spellCheckNoSuggestionsView)
+            || this._balloon.hasView(this.spellCheckSuggestionsListView)
     }
 
     get isShowing() {
-        return this._balloon.visibleView == this.linguisticTooltipView;
+        return this._balloon.visibleView == this.linguisticTooltipView
+            || this._balloon.visibleView == this.spellCheckNoSuggestionsView
+            || this._balloon.visibleView == this.spellCheckSuggestionsListView;
     }
 
     _showUI(marker) {
@@ -203,18 +215,41 @@ export class ShaxpirLinguisticHighlightPluginUI extends Plugin {
         }
 
         const editor = this.editor;
-        const t = editor.locale.t;
+        const locale = editor.locale;
+        const t = locale.t;
         const command = editor.commands.get( COMMAND_NAME );
         const analysis = command._resultsMap.get( marker.name );
 
-        this.linguisticTooltipView.setAnalysisDetails( command, analysis );
+        console.log("CLICKED MARKER: " + marker.name);
+        console.log("ANALYSIS: " + JSON.stringify(analysis));
 
-        if (!this._balloon.hasView(this.linguisticTooltipView)) {
-            this._balloon.add({
-                fitInViewport: true,
-                view: this.linguisticTooltipView,
-                position: this._getBalloonPositionForMarker(editor, marker)
-            });
+        if (!analysis) {
+            // DEBUGGING: why would there be no analysis object for a known marker?
+            command._resultsMap.forEach((v, k) => {
+                console.log(`_resultsMap['${k}'] = ${inspect(v)}`);
+            })
+        }
+
+        if (!this.hasView) {
+            let v = null;
+            if (analysis.spellCheck) {
+                if (analysis.spellCheck.suggestions.length > 0) {
+                    this.spellCheckSuggestionsListView = new ReplacementSuggestionListView(
+                      locale, t("SPELL CHECK"),
+                      analysis.spellCheck.color,
+                      analysis.spellCheck.suggestions,
+                      (replacement) => this._onChooseSuggestion(editor, marker, replacement)
+                    );
+                    v = this.spellCheckSuggestionsListView;
+                } else {
+                    v = this.spellCheckNoSuggestionsView;
+                }
+            } else {
+                this.linguisticTooltipView.setAnalysisDetails( command, analysis );
+                v = this.linguisticTooltipView;
+            }
+            let p = this._getBalloonPositionForMarker(editor, marker);
+            this._balloon.add({ fitInViewport: true, view: v, position: p });
         }
 
         // Begin responding to ui#update once the UI is added.
@@ -234,6 +269,10 @@ export class ShaxpirLinguisticHighlightPluginUI extends Plugin {
 
         if (this._balloon.hasView(this.linguisticTooltipView)) {
             this._balloon.remove(this.linguisticTooltipView);
+        } else if (this._balloon.hasView(this.spellCheckSuggestionsListView)) {
+            this._balloon.remove(this.spellCheckSuggestionsListView);
+        } else if (this._balloon.hasView(this.spellCheckNoSuggestionsView)) {
+            this._balloon.remove(this.spellCheckNoSuggestionsView);
         }
     }
 
@@ -258,6 +297,26 @@ export class ShaxpirLinguisticHighlightPluginUI extends Plugin {
 
         this.listenTo( editor.ui, 'update', update );
         this.listenTo( this._balloon, 'change:visibleView', update );
+    }
+
+    _onChooseSuggestion(editor, marker, replacement) {
+        const model = editor.model;
+
+        const replaceRange = marker.getRange();
+        const replacePosition = marker.getStart();
+
+        const textNode = replacePosition.textNode
+          ? replacePosition.textNode
+          : replacePosition.nodeAfter;
+
+        const attributes = textNode.getAttributes();
+
+        const command = editor.commands.get( COMMAND_NAME );
+        command._resultsMap.delete( marker.name );
+
+        model.enqueueChange( writer => {
+            model.insertContent( writer.createText( replacement, attributes ), replaceRange );
+        });
     }
 
     _getMarkerForCurrentSelection() {

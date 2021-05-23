@@ -6,7 +6,6 @@ import '../../theme/css/linguistic-tooltip.css';
 const DEFAUL_COLOR = "#000";
 const DEFAULT_DISPLAY = "none";
 
-const DEFAULT_SPELLCHECK_LABEL = "Spell Check";
 const DEFAULT_PARTOFSPEECH_LABEL = "ANALYSIS";
 
 const DEFAULT_SENTIMENT_LABEL = "Sentiment Neutral";
@@ -22,10 +21,6 @@ export default class LinguisticTooltipView extends View {
     const t = locale.t;
     this.keystrokes = new KeystrokeHandler();
     const bind = this.bindTemplate;
-
-    this.set('spellCheckLabel', DEFAULT_SPELLCHECK_LABEL);
-    this.set('spellCheckColor', DEFAUL_COLOR);
-    this.set('spellCheckDisplay', DEFAULT_DISPLAY);
 
     this.set('partOfSpeechLabel', DEFAULT_PARTOFSPEECH_LABEL);
     this.set('partOfSpeechColor', DEFAUL_COLOR);
@@ -95,21 +90,6 @@ export default class LinguisticTooltipView extends View {
             { text : ": " },
             { text: bind.to( 'vividnessScore' ) }
           ]
-        },
-
-        {
-          tag: 'div',
-          attributes: {
-            style: [
-              bind.to('spellCheckColor', c => 'color:' + c ),
-              ";",
-              bind.to('spellCheckDisplay', d => 'display:' + d)
-            ],
-            class: [ 'ck', 'ck-linguistic-tooltip-details' ],
-          },
-          children: [
-            { text : bind.to( 'spellCheckLabel' ) },
-          ]
         }
       ]
     });
@@ -117,9 +97,6 @@ export default class LinguisticTooltipView extends View {
 
   setAnalysisDetails(command, analysis) {
     // Set all values to their defaults
-    this.spellCheckLabel = DEFAULT_SPELLCHECK_LABEL;
-    this.spellCheckColor = DEFAUL_COLOR;
-    this.spellCheckDisplay = DEFAULT_DISPLAY;
     this.partOfSpeechLabel = DEFAULT_PARTOFSPEECH_LABEL;
     this.partOfSpeechColor = DEFAUL_COLOR;
     this.partOfSpeechDisplay = DEFAULT_DISPLAY;
@@ -148,19 +125,6 @@ export default class LinguisticTooltipView extends View {
       this.vividnessColor = analysis.vividness.color;
       this.vividnessScore = analysis.vividness.score;
       this.vividnessDisplay = 'block';
-    }
-    if (command.isSpellCheckOn && analysis.spellCheck) {
-      // TODO: show some suggestions
-      // TODO: if there are no suggestions, show a message
-      // TODO: handle suggestion clicks
-      this.spellCheckColor = analysis.spellCheck.color;
-      this.spellCheckLabel = JSON.stringify(analysis.spellCheck.suggestions);
-      this.spellCheckDisplay = 'block';
-
-      // Don't display anything else, if this is a misspelling.
-      this.partOfSpeechDisplay = DEFAULT_DISPLAY;
-      this.sentimentDisplay = DEFAULT_DISPLAY;
-      this.vividnessDisplay = DEFAULT_DISPLAY;
     }
   }
 }

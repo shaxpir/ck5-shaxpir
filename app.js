@@ -267,6 +267,14 @@ function getSpellCheck(word) {
       "suggestions" : [ "the", "het", "hat", "heat" ],
     };
   }
+  if (word.toLowerCase() === "bst") {
+    return {
+      "color" : "rgb(255,0,30)",
+      "shadow" : "rgba(255,0,30, 0.5) 0px 0px 1px",
+      "suggestions" : [ ],
+    };
+  }
+  return null;
 }
 
 function makeLookupTable(words) {

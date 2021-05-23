@@ -4,12 +4,14 @@ import clickOutsideHandler from '@ckeditor/ckeditor5-ui/src/bindings/clickoutsid
 import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview';
 import ContextualBalloon from '@ckeditor/ckeditor5-ui/src/panel/balloon/contextualballoon';
 
-import ThesaurusSuggestionListView from '../forms/ThesaurusSuggestionListView';
+import ReplacementSuggestionListView from '../forms/ReplacementSuggestionListView';
 import HeaderBodyView from '../forms/HeaderBodyView';
 import FakeSelection from '../util/FakeSelection';
 import SelectedText from '../util/SelectedText';
 
 import imageIcon from '../../theme/icons/thesaurus.svg';
+
+const TOOLTIP_HEADER_COLOR = "#C2081D"; // TODO: use a color from the current theme.
 
 const VISUAL_SELECTION_MARKER_NAME = 'thesaurus-ui';
 const THESAURUS_KEYSTROKE = 'Ctrl+G';
@@ -39,8 +41,8 @@ export class ShaxpirThesaurusPlugin extends Plugin {
 
     editor.editing.view.addObserver(ClickObserver);
 
-    this.suggestionListView = new ThesaurusSuggestionListView(
-      locale, [], (replacement) => this._onChooseSuggestion(replacement)
+    this.suggestionListView = new ReplacementSuggestionListView(
+      locale, t("THESAURUS"), TOOLTIP_HEADER_COLOR, [], (replacement) => this._onChooseSuggestion(replacement)
     );
     this.noSuggestionsView = new HeaderBodyView(locale, t("THESAURUS"), t("No Suggestions."));
     this._balloon = editor.plugins.get(ContextualBalloon);
@@ -126,7 +128,7 @@ export class ShaxpirThesaurusPlugin extends Plugin {
     FakeSelection.showFakeVisualSelection(editor, VISUAL_SELECTION_MARKER_NAME);
 
     if (suggestions.length > 0) {
-      this.suggestionListView = new ThesaurusSuggestionListView(
+      this.suggestionListView = new ReplacementSuggestionListView(
         editor.locale, suggestions, (replacement) => this._onChooseSuggestion(replacement)
       );
       if (!this._balloon.hasView(this.suggestionListView)) {
